@@ -457,3 +457,52 @@ social_index_data <- subset_data_yr %>%
 # Add summary index as new column to data set
 subset_data_yr$social_index <- rowMeans(social_index_data, na.rm = TRUE)    
                      ###  END OF SOCIAL STRUCTURE ###
+
+#######  INTERNATIONAL FACTORS #########
+#International Factors Dataset with LibDemIndex
+international_factors_dataset <- v_dem %>% 
+  filter(year >= 2005)  %>%
+  select(country_name, country_text_id, country_id, year, v2x_libdem, v2svdomaut, v2svinlaut,
+         v2elintmon, v2elmonden,v2svindep, v2regsupgroups_13) %>%
+  rename(liberal_democracy = v2x_libdem, domestic_policy_autonomy = v2svdomaut,
+         international_policy_autonomy = v2svinlaut, international_election_monitors = v2elintmon, 
+         election_monitor_denied = v2elmonden, independent_state = v2svindep, 
+         foreign_regime_support = v2regsupgroups_13)
+
+    #normalize index using z score - bigger score is better for democracy 
+
+international_factors_dataset <- v_dem %>% 
+  filter(year >= 2005) %>%
+  select(country_name, country_text_id, country_id, year, v2x_libdem, v2svdomaut, v2svinlaut,
+         v2elintmon, v2elmonden, v2elmonref, v2svindep, v2regsupgroups_13) %>%
+  rename(liberal_democracy = v2x_libdem, 
+         domestic_policy_autonomy = v2svdomaut,
+         international_policy_autonomy = v2svinlaut, 
+         international_election_monitors = v2elintmon, 
+         election_monitor_denied = v2elmonden, 
+         election_monitor_refused = v2elmonref, 
+         independent_state = v2svindep, 
+         foreign_regime_support = v2regsupgroups_13)
+                     
+#Change the Directon of Selected Vatiables to better reflect imapact on LDI
+mutated_data <- international_factors_dataset %>%
+  mutate(across(c(election_monitor_denied, election_monitor_refused, foreign_regime_support), ~ - .x))
+
+selected_vars <- c("domestic_policy_autonomy", 
+                   "international_policy_autonomy", 
+                   "international_election_monitors", 
+                   "election_monitor_denied", 
+                   "election_monitor_refused", 
+                   "independent_state", 
+                   "foreign_regime_support")
+
+# Replace NAs with 0
+mutated_data[selected_vars] <- mutated_data[selected_vars] %>% replace(is.na(.), 0)
+
+# Standardize & Compute Index
+mutated_data <- mutated_data %>%
+  mutate(across(all_of(selected_vars), ~ as.numeric(scale(.x)))) %>%
+  rowwise() %>%
+  mutate(democracy_index = mean(c_across(all_of(selected_vars)), na.rm = TRUE)) %>%
+  ungroup()
+
