@@ -146,6 +146,45 @@ na_summary <- data.frame(
 # Print the summary
 print(na_summary)
 
+# Calculate the mean or median
+mean_value <- mean(v_dem_filtered$v2xlg_legcon, na.rm = TRUE)
+# median_value <- median(v_dem_filtered$v2xlg_legcon, na.rm = TRUE)
+
+# Fill missing values with mean or median
+v_dem_filtered$v2xlg_legcon[is.na(v_dem_filtered$v2xlg_legcon)] <- mean_value
+# v_dem_filtered$v2xlg_legcon[is.na(v_dem_filtered$v2xlg_legcon)] <- median_value
+
+# Create a summary of total values, NA counts, and percentage of missing values
+na_summary <- data.frame(
+  Column = names(v_dem_filtered),
+  Total_Values = nrow(v_dem_filtered),
+  NA_Counts = sapply(v_dem_filtered, function(x) sum(is.na(x))),
+  NA_Percentage = sapply(v_dem_filtered, function(x) mean(is.na(x)) * 100)  # Convert to percentage
+)
+
+# Print the summary
+print(na_summary)
+
+# Yearly Trends of Each Variable
+
+# Remove 'country_name' before aggregation
+yearly_avg <- aggregate(. ~ year, data = v_dem_filtered[, !names(v_dem_filtered) %in% "country_name"], FUN = mean, na.rm = TRUE)
+
+# Number of variables (excluding 'year')
+num_vars <- ncol(yearly_avg) - 1  
+# Setting image size
+options(repr.plot.width = 25, repr.plot.height = 20)
+# Adjust layout and margins
+par(mfrow = c(ceiling(num_vars / 2), 2), mar = c(4, 4, 2, 1))  
+
+# Loop through each variable and create a separate plot
+for (var in colnames(yearly_avg)[-1]) {
+  plot(yearly_avg$year, yearly_avg[[var]], type = "l", col = "blue", lwd = 2,
+       xlab = "Year", ylab = "Average Value", main = var)
+}
+
+
+
 # Creating Correlation Plot
 library(corrplot)
 
@@ -327,6 +366,34 @@ correlation_matrix <- cor(v_dem_yearly[, c("Executive_Accountability", "Corrupti
 # Generate the correlation plot
 corrplot(correlation_matrix, method = "color", type = "full", 
          addCoef.col = "black", tl.col = "black", tl.srt = 45, number.cex = 0.8)
+
+# historical Trend Plotting
+
+# Ensure numeric columns (excluding 'year' and 'country_name')
+numeric_cols <- setdiff(names(v_dem_yearly), c("year", "country_name"))
+v_dem_yearly[, numeric_cols] <- lapply(v_dem_yearly[, numeric_cols], as.numeric)
+
+# Aggregate by year (ignoring 'country_name')
+agg_data <- aggregate(. ~ year, data = v_dem_yearly[, c("year", numeric_cols)], FUN = mean, na.rm = TRUE)
+
+# Setting image size
+options(repr.plot.width = 15, repr.plot.height = 10)
+
+# Setting image size and adjusting margins to create space below the graph
+par(mar = c(7, 5, 5, 2))  # Increase bottom margin
+
+# Plot all columns on one graph using matplot (without title)
+matplot(agg_data$year, agg_data[, -1], type = "o", pch = 16, lty = 1, 
+        col = c("blue", "red", "green", "purple"),
+        xlab = "Year", ylab = "Index Value", main = "")
+
+# Add a horizontal legend outside the top border
+legend("top", legend = colnames(agg_data)[-1], col = c("blue", "red", "green", "purple"), 
+       pch = 16, lty = 1, horiz = TRUE, xpd = TRUE, inset = -0.1)
+
+# Add the title below the graph
+mtext("Governance Index and Its Constituents Indicators Over Time", 
+      side = 1, line = 5, font = 2, cex = 1.2)
 
 
 ###### End of Political Leadership ############# 
