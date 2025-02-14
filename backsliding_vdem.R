@@ -14,9 +14,14 @@ library(vdemdata)
 v_dem <- vdem
 
 
-
 #### POLITICAL ECONOMY INDEX
 
+
+#getwd()
+#setwd("C:/Users/eddie/Downloads/V-Dem-CY-FullOthers-v14_csv_YyKfizl")
+
+# CSV file path (commented out since it is a local file):
+# vdem <- read.csv("V-Dem-CY-Full+Others-v14.csv")
 
 library(tidyverse)
 
@@ -40,9 +45,9 @@ subset_data <- vdem %>%
 
 library(dplyr)
 
-# Filter the dataset to include only years from 1990 onwards
+# Filter the dataset to include only years from 2005 onwards
 vdem_cleaner <- subset_data %>%
-  filter(year >= 1990)
+  filter(year >= 2005)
 
 
 
