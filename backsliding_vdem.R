@@ -506,3 +506,10 @@ mutated_data <- mutated_data %>%
   mutate(democracy_index = mean(c_across(all_of(selected_vars)), na.rm = TRUE)) %>%
   ungroup()
 
+#regression of variables in international factors on LDI
+# Run the regression
+model <- lm(liberal_democracy ~ ., data = mutated_data %>% select(liberal_democracy, all_of(selected_vars)))
+
+# Display regression results
+summary(model)
+
