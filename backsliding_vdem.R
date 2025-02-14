@@ -21,7 +21,7 @@ v_dem <- vdem
 #setwd("C:/Users/eddie/Downloads/V-Dem-CY-FullOthers-v14_csv_YyKfizl")
 
 # CSV file path (commented out since it is a local file):
-# vdem <- read.csv("V-Dem-CY-Full+Others-v14.csv")
+#vdem <- read.csv("V-Dem-CY-Full+Others-v14.csv")
 
 library(tidyverse)
 
@@ -459,6 +459,27 @@ vdem_cleanest <- vdem_cleaner %>%
   arrange(year) %>%  # Ensure data is in chronological order
   mutate(LDI_pct_change = (v2x_libdem - lag(v2x_libdem)) / lag(v2x_libdem) * 100) %>%
   ungroup()
+
+view(vdem_cleanest)
+
+vdem_cleanest %>%
+  group_by(year) %>%
+  summarise(
+    mean_LDI = mean(LDI_pct_change, na.rm = TRUE),
+    median_LDI = median(LDI_pct_change, na.rm = TRUE),
+    min_LDI = min(LDI_pct_change, na.rm = TRUE),
+    min_country = country_name[which.min(LDI_pct_change)],
+    max_LDI = max(LDI_pct_change, na.rm = TRUE),
+    max_country = country_name[which.max(LDI_pct_change)]
+  ) %>%
+  arrange(year) %>%
+  walk(~ cat(
+    "Year:", .x$year, "\n",
+    "  Mean LDI % Change:", round(.x$mean_LDI, 2), "\n",
+    "  Median LDI % Change:", round(.x$median_LDI, 2), "\n",
+    "  Min LDI % Change:", round(.x$min_LDI, 2), "(", .x$min_country, ")", "\n",
+    "  Max LDI % Change:", round(.x$max_LDI, 2), "(", .x$max_country, ")", "\n\n"
+  ))
 
 ###############################################
 
