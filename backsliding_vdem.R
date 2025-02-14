@@ -14,9 +14,14 @@ library(vdemdata)
 v_dem <- vdem
 
 
-
 #### POLITICAL ECONOMY INDEX
 
+
+#getwd()
+#setwd("C:/Users/eddie/Downloads/V-Dem-CY-FullOthers-v14_csv_YyKfizl")
+
+# CSV file path (commented out since it is a local file):
+# vdem <- read.csv("V-Dem-CY-Full+Others-v14.csv")
 
 library(tidyverse)
 
@@ -40,9 +45,9 @@ subset_data <- vdem %>%
 
 library(dplyr)
 
-# Filter the dataset to include only years from 1990 onwards
+# Filter the dataset to include only years from 2005 onwards
 vdem_cleaner <- subset_data %>%
-  filter(year >= 1990)
+  filter(year >= 2005)
 
 
 
@@ -397,3 +402,189 @@ mtext("Governance Index and Its Constituents Indicators Over Time",
 
 
 ###### End of Political Leadership ############# 
+
+
+
+
+
+####### POLITICAL INSTITUTIONS
+
+# Subset
+
+subset_data2 <- vdem %>%
+  select(
+    v2x_jucon,
+    v2x_corr,
+    v2xps_party,
+    year,
+    country_name,
+    v2x_libdem
+  )
+
+library(dplyr)
+
+# Filter the dataset to include only years from 2005 onwards
+vdem_institution <- subset_data2 %>%
+  filter(year >= 2005)
+
+
+
+library(dplyr)
+
+# Create PII (Political Institutional Index) and add it to the dataset
+vdem_institution <- subset_data2 %>%
+  filter(year >= 2005) %>%
+  mutate(
+    z_jucon = as.numeric(scale(v2x_jucon)),  
+    z_corr = as.numeric(scale(v2x_corr)),
+    z_party = as.numeric(scale(v2xps_party)),
+    PII = (z_jucon + z_corr + z_party) / 3  # Final Political Institutional Index
+  )
+
+# View the first few rows
+head(vdem_institution)
+
+view(vdem_institution)
+
+
+
+######## END OF POLITICAL INSTITUTIONS
+
+
+
+### Transformation of LibDem to Percent Change
+
+vdem_cleanest <- vdem_cleaner %>%
+  group_by(country_name) %>%  # Group by country to calculate change within each country
+  arrange(year) %>%  # Ensure data is in chronological order
+  mutate(LDI_pct_change = (v2x_libdem - lag(v2x_libdem)) / lag(v2x_libdem) * 100) %>%
+  ungroup()
+
+###############################################
+
+## SOCIAL STRUCTURE AND POLITICAL COALITIONS ##
+subset_data <- v_dem %>%
+  select(
+    year,
+    country_name,
+    histname, # time-specific country name
+    country_id,
+    e_mipopula, # population total in thousands
+    e_wb_pop, # total population from World Bank
+    e_miurbani, # urbanization rate
+    e_miurbpop, # total urban population
+    e_regiongeo, #geographic region
+    e_regionpol, #politico-geographic region
+    e_fh_status, # Freedom House status
+    e_wbgi_pve, # World Bank political stability
+    e_p_polity, # Polity score
+    v2x_polyarchy,     # Electoral democracy index 
+    v2x_libdem,        # Liberal democracy
+    v2x_egaldem,       # Egalitarian democracy
+    v2x_partipdem,     # Participatory democracy
+    v2x_delibdem,      # Deliberative democracy
+    v2regsupgroupssize,        # Regime support groups size
+    v2regoppgroupssize, # Regime opposition groups size
+    v2regsuploc, # Regime support location
+    v2clacjust, #social class equality in civil liberties
+    v2clsocgrp,     # social group equality
+    v2clrgunev,     # sub national civil lib unevenness      
+    v2pepwrses, # power dist by SES
+    v2pepwrsoc, # power dist by social group
+    v2clpolcl, # political group equality civil lib
+    v2peapsecon, # access to public services by SES
+    v2peapssoc, # access to public services by social group
+    v2clgencl, # gender equality civil liberties
+    v2peapsgen,  # access to public services by gender
+    v2pepwrgen, # power dist by gender
+    v2pepwrgeo, # power dist by urban-rural
+    v2peapsgeo, # access to public services by urban-rural
+    v2clgeocl #urban-rural equality civil liberties
+  )
+
+# Filter the data set for years including and after 2005 
+subset_data_yr <- subset_data %>%
+  filter(year >= 2005)                    
+
+# Create new data set containing only variables that will be included in index
+social_index_data <- subset_data_yr %>%
+  select(
+    v2regsupgroupssize,        # Regime support groups size
+    v2clacjust, #social class equality in civil liberties
+    v2clsocgrp,     # social group equality
+    v2pepwrses, # power dist by SES
+    v2pepwrsoc, # power dist by social group
+    v2clpolcl, # political group equality civil lib
+    v2peapsecon, # access to public services by SES
+    v2clgencl, # gender equality civil liberties
+    v2pepwrgen, # power dist by gender
+  )
+                     
+# Aggregate variables into a single summary index by calculating the simple mean
+# Add summary index as new column to data set
+subset_data_yr$social_index <- rowMeans(social_index_data, na.rm = TRUE)    
+                     ###  END OF SOCIAL STRUCTURE ###
+
+#######  INTERNATIONAL FACTORS #########
+#International Factors Dataset with LibDemIndex
+international_factors_dataset <- v_dem %>% 
+  filter(year >= 2005)  %>%
+  select(country_name, country_text_id, country_id, year, v2x_libdem, v2svdomaut, v2svinlaut,
+         v2elintmon, v2elmonden,v2svindep, v2regsupgroups_13) %>%
+  rename(liberal_democracy = v2x_libdem, domestic_policy_autonomy = v2svdomaut,
+         international_policy_autonomy = v2svinlaut, international_election_monitors = v2elintmon, 
+         election_monitor_denied = v2elmonden, independent_state = v2svindep, 
+         foreign_regime_support = v2regsupgroups_13)
+
+    #normalize index using z score - bigger score is better for democracy 
+
+international_factors_dataset <- v_dem %>% 
+  filter(year >= 2005) %>%
+  select(country_name, country_text_id, country_id, year, v2x_libdem, v2svdomaut, v2svinlaut,
+         v2elintmon, v2elmonden, v2elmonref, v2svindep, v2regsupgroups_13) %>%
+  rename(liberal_democracy = v2x_libdem, 
+         domestic_policy_autonomy = v2svdomaut,
+         international_policy_autonomy = v2svinlaut, 
+         international_election_monitors = v2elintmon, 
+         election_monitor_denied = v2elmonden, 
+         election_monitor_refused = v2elmonref, 
+         independent_state = v2svindep, 
+         foreign_regime_support = v2regsupgroups_13)
+                     
+#Change the Directon of Selected Vatiables to better reflect imapact on LDI
+mutated_data <- international_factors_dataset %>%
+  mutate(across(c(election_monitor_denied, election_monitor_refused, foreign_regime_support), ~ - .x))
+
+selected_vars <- c("domestic_policy_autonomy", 
+                   "international_policy_autonomy", 
+                   "international_election_monitors", 
+                   "election_monitor_denied", 
+                   "election_monitor_refused", 
+                   "independent_state", 
+                   "foreign_regime_support")
+
+# Replace NAs with 0
+mutated_data[selected_vars] <- mutated_data[selected_vars] %>% replace(is.na(.), 0)
+
+# Standardize & Compute Index
+mutated_data <- mutated_data %>%
+  mutate(across(all_of(selected_vars), ~ as.numeric(scale(.x)))) %>%
+  rowwise() %>%
+  mutate(democracy_index = mean(c_across(all_of(selected_vars)), na.rm = TRUE)) %>%
+  ungroup()
+
+#regression of variables in international factors on LDI
+#make sure it is % change 
+mutated_data <- mutated_data %>%
+  arrange(country_id, year) %>%
+  group_by(country_id) %>%
+  mutate(ldi_pct_change = (liberal_democracy - lag(liberal_democracy)) / abs(lag(liberal_democracy)) * 100) %>%
+  ungroup()
+
+# Run the regression
+model_pct_change <- lm(ldi_pct_change ~ ., data = mutated_data %>% select(ldi_pct_change, all_of(selected_vars)))
+
+# Display regression results
+summary(model_pct_change)
+
+
