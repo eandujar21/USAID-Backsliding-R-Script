@@ -394,3 +394,66 @@ vdem_cleanest <- vdem_cleaner %>%
   ungroup()
 
 ###############################################
+
+## SOCIAL STRUCTURE AND POLITICAL COALITIONS ##
+subset_data <- v_dem %>%
+  select(
+    year,
+    country_name,
+    histname, # time-specific country name
+    country_id,
+    e_mipopula, # population total in thousands
+    e_wb_pop, # total population from World Bank
+    e_miurbani, # urbanization rate
+    e_miurbpop, # total urban population
+    e_regiongeo, #geographic region
+    e_regionpol, #politico-geographic region
+    e_fh_status, # Freedom House status
+    e_wbgi_pve, # World Bank political stability
+    e_p_polity, # Polity score
+    v2x_polyarchy,     # Electoral democracy index 
+    v2x_libdem,        # Liberal democracy
+    v2x_egaldem,       # Egalitarian democracy
+    v2x_partipdem,     # Participatory democracy
+    v2x_delibdem,      # Deliberative democracy
+    v2regsupgroupssize,        # Regime support groups size
+    v2regoppgroupssize, # Regime opposition groups size
+    v2regsuploc, # Regime support location
+    v2clacjust, #social class equality in civil liberties
+    v2clsocgrp,     # social group equality
+    v2clrgunev,     # sub national civil lib unevenness      
+    v2pepwrses, # power dist by SES
+    v2pepwrsoc, # power dist by social group
+    v2clpolcl, # political group equality civil lib
+    v2peapsecon, # access to public services by SES
+    v2peapssoc, # access to public services by social group
+    v2clgencl, # gender equality civil liberties
+    v2peapsgen,  # access to public services by gender
+    v2pepwrgen, # power dist by gender
+    v2pepwrgeo, # power dist by urban-rural
+    v2peapsgeo, # access to public services by urban-rural
+    v2clgeocl #urban-rural equality civil liberties
+  )
+
+# Filter the data set for years including and after 2005 
+subset_data_yr <- subset_data %>%
+  filter(year >= 2005)                    
+
+# Create new data set containing only variables that will be included in index
+social_index_data <- subset_data_yr %>%
+  select(
+    v2regsupgroupssize,        # Regime support groups size
+    v2clacjust, #social class equality in civil liberties
+    v2clsocgrp,     # social group equality
+    v2pepwrses, # power dist by SES
+    v2pepwrsoc, # power dist by social group
+    v2clpolcl, # political group equality civil lib
+    v2peapsecon, # access to public services by SES
+    v2clgencl, # gender equality civil liberties
+    v2pepwrgen, # power dist by gender
+  )
+                     
+# Aggregate variables into a single summary index by calculating the simple mean
+# Add summary index as new column to data set
+subset_data_yr$social_index <- rowMeans(social_index_data, na.rm = TRUE)    
+                     ###  END OF SOCIAL STRUCTURE ###
