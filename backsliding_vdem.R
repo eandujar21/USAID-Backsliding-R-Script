@@ -742,3 +742,69 @@ print(new_dataset)
 
 
 view(new_dataset)
+
+
+
+#### REGRESSION
+
+
+# Rename the columns in new_dataset
+new_dataset <- new_dataset %>%
+  rename(
+    international_index = democracy_index,
+    institutions_index = PII,
+    economy_index = PEI_weighted
+  )
+
+# View the result
+print(new_dataset)
+
+
+
+# Run linear regression
+model <- lm(LDI_pct_change ~ ., data = new_dataset %>% select(-country_name, -year, -liberal_democracy))
+
+# View summary of regression results
+summary(model)
+
+
+# Run linear regression
+model2 <- lm(liberal_democracy ~ ., data = new_dataset %>% select(-country_name, -year, -LDI_pct_change))
+
+summary(model2)
+
+
+
+
+
+
+
+### TIME LAG MODEL (WORK IN PROGRESS)
+
+
+# Step 1: Calculate the change in liberal_democracy between 2005 and 2010
+change_in_libdem <- new_dataset %>%
+  filter(year == 2005 | year == 2010) %>%
+  select(country_name, year, liberal_democracy) %>%
+  spread(key = year, value = liberal_democracy) %>%
+  mutate(libdem_change = `2010` - `2005`) %>%
+  select(country_name, libdem_change)
+
+# Step 2: Filter the dataset for the year 2005 to get independent variables
+independent_vars_2005 <- new_dataset %>%
+  filter(year == 2005) %>%
+  select(country_name, everything()) %>%
+  select(-year, -liberal_democracy)  # Exclude variables not needed for regression
+
+# Step 3: Merge the change in liberal_democracy with the independent variables
+regression_data <- independent_vars_2005 %>%
+  left_join(change_in_libdem, by = "country_name")
+
+# View the result to ensure the join was successful
+print(head(regression_data))
+
+# Step 4: Run the linear regression
+model <- lm(libdem_change ~ ., data = regression_data)
+
+# View the regression summary
+summary(model)
