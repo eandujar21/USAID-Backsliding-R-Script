@@ -340,7 +340,7 @@ corrplot(correlation_matrix, method = "color", type = "full",
 
 
 
-####### POLITICAL INSTITUTIONS #############
+####### POLITICAL INSTITUTIONS
 
 # Subset
 
@@ -364,26 +364,24 @@ vdem_institution <- subset_data2 %>%
 
 library(dplyr)
 
-# Standardization function (z-score)
-standardize <- function(x) {
-  (x - mean(x, na.rm = TRUE)) / sd(x, na.rm = TRUE)
-}
-
-# Create the Institutional Index (similar to PEI)
+# Create PII (Political Institutional Index) and add it to the dataset
 vdem_institution <- subset_data2 %>%
   filter(year >= 2005) %>%
   mutate(
-    z_jucon = standardize(v2x_jucon),
-    z_corr = standardize(v2x_corr),
-    z_party = standardize(v2xps_party),
-    institutional_index = (z_jucon + z_corr + z_party) / 3  # Averaging the z-scores
+    z_jucon = as.numeric(scale(v2x_jucon)),  
+    z_corr = as.numeric(scale(v2x_corr)),
+    z_party = as.numeric(scale(v2xps_party)),
+    PII = (z_jucon + z_corr + z_party) / 3  # Final Political Institutional Index
   )
 
 # View the first few rows
 head(vdem_institution)
 
+view(vdem_institution)
 
-######## END OF POLITICAL INSTITUTIONS #####################
+
+
+######## END OF POLITICAL INSTITUTIONS
 
 
 
