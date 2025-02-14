@@ -335,3 +335,64 @@ corrplot(correlation_matrix, method = "color", type = "full",
 
 
 ###### End of Political Leadership ############# 
+
+
+
+
+
+####### POLITICAL INSTITUTIONS #############
+
+# Subset
+
+subset_data2 <- vdem %>%
+  select(
+    v2x_jucon,
+    v2x_corr,
+    v2xps_party,
+    year,
+    country_name,
+    v2x_libdem
+  )
+
+library(dplyr)
+
+# Filter the dataset to include only years from 2005 onwards
+vdem_institution <- subset_data2 %>%
+  filter(year >= 2005)
+
+
+
+library(dplyr)
+
+# Standardization function (z-score)
+standardize <- function(x) {
+  (x - mean(x, na.rm = TRUE)) / sd(x, na.rm = TRUE)
+}
+
+# Create the Institutional Index (similar to PEI)
+vdem_institution <- subset_data2 %>%
+  filter(year >= 2005) %>%
+  mutate(
+    z_jucon = standardize(v2x_jucon),
+    z_corr = standardize(v2x_corr),
+    z_party = standardize(v2xps_party),
+    institutional_index = (z_jucon + z_corr + z_party) / 3  # Averaging the z-scores
+  )
+
+# View the first few rows
+head(vdem_institution)
+
+
+######## END OF POLITICAL INSTITUTIONS #####################
+
+
+
+### Transformation of LibDem to Percent Change
+
+vdem_cleanest <- vdem_cleaner %>%
+  group_by(country_name) %>%  # Group by country to calculate change within each country
+  arrange(year) %>%  # Ensure data is in chronological order
+  mutate(LDI_pct_change = (v2x_libdem - lag(v2x_libdem)) / lag(v2x_libdem) * 100) %>%
+  ungroup()
+
+###############################################
