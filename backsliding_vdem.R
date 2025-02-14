@@ -1,7 +1,7 @@
 # First, you need to have the devtools package installed
-install.packages("devtools")
+#install.packages("devtools")
 # now, install the vdemdata package directly from GitHub
-devtools::install_github("vdeminstitute/vdemdata")
+#devtools::install_github("vdeminstitute/vdemdata")
 
 # NOTE: make sure you have an updated R version and
 # - since the package is a development version - 
@@ -365,6 +365,8 @@ pca_model <- prcomp(v_dem_yearly[, c("Executive_Accountability", "Corruption_Mis
 v_dem_yearly <- v_dem_yearly %>%
   mutate(Governance_Index = pca_model$x[, 1])
 
+view(v_dem_yearly)
+
 # Select relevant columns for correlation
 correlation_matrix <- cor(v_dem_yearly[, c("Executive_Accountability", "Corruption_Misuse", "Executive_Power", "Governance_Index")], 
                           use = "complete.obs")  # Exclude missing values
@@ -546,6 +548,9 @@ social_index_data <- subset_data_yr %>%
 subset_data_yr$social_index <- rowMeans(social_index_data, na.rm = TRUE)    
                      ###  END OF SOCIAL STRUCTURE ###
 
+view(subset_data_yr)
+
+
 #######  INTERNATIONAL FACTORS #########
 #International Factors Dataset with LibDemIndex
 international_factors_dataset <- v_dem %>% 
@@ -594,6 +599,8 @@ mutated_data <- mutated_data %>%
   mutate(democracy_index = mean(c_across(all_of(selected_vars)), na.rm = TRUE)) %>%
   ungroup()
 
+view(mutated_data)
+
 #regression of variables in international factors on LDI
 #make sure it is % change 
 mutated_data <- mutated_data %>%
@@ -609,3 +616,129 @@ model_pct_change <- lm(ldi_pct_change ~ ., data = mutated_data %>% select(ldi_pc
 summary(model_pct_change)
 
 
+###### END OF INT FACTORS ########
+
+
+
+####### COMBINING ALL DATA INTO ONE FRAME #############
+
+
+# Select only the required columns from mutated_data
+new_dataset <- mutated_data %>%
+  select(country_name, year, democracy_index) 
+
+# Join with subset_data_yr to add the social_index column
+new_dataset <- new_dataset %>%
+  left_join(select(subset_data_yr, country_name, year, social_index), 
+            by = c("country_name", "year"))
+
+# View the result
+print(new_dataset)
+
+view(new_dataset)
+
+
+
+
+# Select required columns from mutated_data
+new_dataset <- mutated_data %>%
+  select(country_name, year, democracy_index, liberal_democracy) 
+
+# Join with subset_data_yr to add social_index
+new_dataset <- new_dataset %>%
+  left_join(select(subset_data_yr, country_name, year, social_index), 
+            by = c("country_name", "year"))
+
+# View the result
+print(new_dataset)
+
+
+
+
+
+
+# Select required columns from mutated_data
+new_dataset <- mutated_data %>%
+  select(country_name, year, democracy_index, liberal_democracy) 
+
+# Join with subset_data_yr to add social_index
+new_dataset <- new_dataset %>%
+  left_join(select(subset_data_yr, country_name, year, social_index), 
+            by = c("country_name", "year")) %>%
+  
+  # Join with v_dem_yearly to add Governance_Index
+  left_join(select(v_dem_yearly, country_name, year, Governance_Index), 
+            by = c("country_name", "year"))
+
+# View the result
+print(new_dataset)
+view(new_dataset)
+
+
+
+
+
+
+
+
+# Select required columns from mutated_data
+new_dataset <- mutated_data %>%
+  select(country_name, year, democracy_index, liberal_democracy) 
+
+# Join with subset_data_yr to add social_index
+new_dataset <- new_dataset %>%
+  left_join(select(subset_data_yr, country_name, year, social_index), 
+            by = c("country_name", "year")) %>%
+  
+  # Join with v_dem_yearly to add Governance_Index
+  left_join(select(v_dem_yearly, country_name, year, Governance_Index), 
+            by = c("country_name", "year")) %>%
+  
+  # Join with vdem_institution to add PII
+  left_join(select(vdem_institution, country_name, year, PII), 
+            by = c("country_name", "year"))
+
+# View the result
+print(new_dataset)
+
+
+# Select required columns from mutated_data
+new_dataset <- mutated_data %>%
+  select(country_name, year, democracy_index, liberal_democracy) 
+
+# Sequentially join datasets to add more variables
+new_dataset <- new_dataset %>%
+  left_join(select(subset_data_yr, country_name, year, social_index), 
+            by = c("country_name", "year")) %>%
+  left_join(select(v_dem_yearly, country_name, year, Governance_Index), 
+            by = c("country_name", "year")) %>%
+  left_join(select(vdem_institution, country_name, year, PII), 
+            by = c("country_name", "year")) %>%
+  left_join(select(vdem_cleaner, country_name, year, PEI_weighted), 
+            by = c("country_name", "year"))
+
+# View the final dataset
+print(new_dataset)
+
+
+view(new_dataset)
+view(vdem_cleanest)
+
+
+
+
+
+
+# Assuming new_dataset has been created as per previous steps
+
+# Join with vdem_cleanest to add LDI_pct_change
+new_dataset <- new_dataset %>%
+  left_join(select(vdem_cleanest, country_name, year, LDI_pct_change), 
+            by = c("country_name", "year"))
+
+# View the updated dataset
+print(new_dataset)
+
+
+
+view(new_dataset)
