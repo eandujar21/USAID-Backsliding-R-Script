@@ -507,9 +507,17 @@ mutated_data <- mutated_data %>%
   ungroup()
 
 #regression of variables in international factors on LDI
+#make sure it is % change 
+mutated_data <- mutated_data %>%
+  arrange(country_id, year) %>%
+  group_by(country_id) %>%
+  mutate(ldi_pct_change = (liberal_democracy - lag(liberal_democracy)) / abs(lag(liberal_democracy)) * 100) %>%
+  ungroup()
+
 # Run the regression
-model <- lm(liberal_democracy ~ ., data = mutated_data %>% select(liberal_democracy, all_of(selected_vars)))
+model_pct_change <- lm(ldi_pct_change ~ ., data = mutated_data %>% select(ldi_pct_change, all_of(selected_vars)))
 
 # Display regression results
-summary(model)
+summary(model_pct_change)
+
 
