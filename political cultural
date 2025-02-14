@@ -1,167 +1,45 @@
-# Install the development version of the vdemdata package 
-# (the package is an ongoing project, 
-# keep checking for updates)
-install.packages("devtools")
-# now, install the vdemdata package directly from GitHub
-devtools::install_github("vdeminstitute/vdemdata")
-
+# Load necessary libraries
+library(devtools)
 library(vdemdata)
-library(ggplot2)
 library(dplyr)
+library(ggplot2)
 library(tidyr)
-library(vdemdata)  
+library(car)
+library(ggcorrplot)
 
+# Install the vdemdata package (if not installed)
+# devtools::install_github("vdeminstitute/vdemdata")
+
+# Load V-Dem dataset
 data("vdem")  
 
+# Filter data for years 1990-2005 and select relevant variables
 vdem_filtered <- vdem %>%
-  filter(year >= 1990) %>%
-  select(year, country_name, v2capolit, v2canonpol, v2caassemb,
-         v2caviol, v2psnatpar, v2pscomprg, v2caautmob,
-         v2mecorrpt, v2castate, v2elirreg, v2stfisccap)
+  filter(year >= 1990 & year <= 2005) %>%
+  select(year, country_name, v2x_libdem, 
+         v2capolit, v2canonpol, v2caassemb, 
+         v2elirreg, v2psnatpar, v2pscomprg, 
+         v2caautmob, v2mecorrpt, v2castate)
 
-
-library(dplyr)
-
-vdem_selected <- vdem %>%
-  select(v2capolit, v2canonpol, v2caassemb,v2caviol, v2psnatpar, 
-         v2pscomprg, v2caautmob, v2mecorrpt, v2castate, v2elirreg, v2stfisccap, v2x_libdem)
-
-cor_matrix <- cor(vdem_selected, use = "pairwise.complete.obs")
-
-print(cor_matrix)
-
-install.packages("ggcorrplot")
-library(ggcorrplot)
-ggcorrplot(cor_matrix, 
-           colors = c("blue", "white", "red"), 
-           title = "Correlation Heatmap of V-Dem Variables",
-           lab = FALSE) 
-
-                   
-library(stats)
-
-model <- lm(v2x_libdem ~ v2capolit + v2canonpol + v2caassemb +
-              v2caviol + v2psnatpar + v2pscomprg + v2caautmob +
-              v2mecorrpt + v2castate + v2elirreg + v2stfisccap, data = vdem)
-
-summary(model)
-
-
-install.packages("car", dependencies = TRUE)
-library(car)
-vif_values <- vif(model)
-
-print(vif_values)
-
-
-#Descriptive summary data
-vdem_filtered <- vdem %>%
-  filter(year >= 1990) %>%
-  select(year, v2capolit, v2canonpol, v2caassemb, 
-         v2caviol, v2psnatpar, v2pscomprg, v2caautmob, v2mecorrpt, v2castate, 
-         v2elirreg, v2stfisccap, v2x_libdem)
-
-summary_stats <- vdem_filtered %>%
-  summarise(across(everything(), list(mean = mean, sd = sd, min = min, max = max, median = median), na.rm = TRUE))
-
-print(summary_stats)
-
-
-library(dplyr)
-library(ggcorrplot)
-vdem_filtered <- vdem %>%
-  filter(year >= 1990) %>%
-  select(year, country_name, v2capolit, v2canonpol, v2caassemb,
-         v2caviol, v2psnatpar, v2pscomprg, v2caautmob, v2mecorrpt, v2castate, 
-         v2elirreg, v2x_libdem)
+# Standardize all selected variables (except year & country_name)
 vdem_standardized <- vdem_filtered %>%
-  mutate(across(-year, ~scale(.)[,1]))  
+  mutate(across(-c(year, country_name), ~ scale(.)[,1]))
+
+# Create summary indices
 vdem_standardized <- vdem_standardized %>%
   rowwise() %>%
   mutate(
     Citizen_Engagement_Index = mean(c(v2capolit, v2canonpol, v2caassemb), na.rm = TRUE),
     Electoral_Integrity_Index = mean(c(v2elirreg, v2psnatpar, v2pscomprg), na.rm = TRUE),
-    State_Control_Index = mean(c(v2caautmob, v2mecorrpt, v2castate), na.rm = TRUE),
-    External_Influence_Index = mean(c(v2stfisccap), na.rm = TRUE)
-  )
-summary(vdem_standardized)
-
-cor_matrix <- cor(vdem_standardized[, c("v2capolit", "v2canonpol", "v2caassemb",
-                                        "v2elirreg", "v2psnatpar", "v2pscomprg",
-                                        "v2caautmob", "v2mecorrpt", "v2castate",
-                                        "v2stfisccap")], use = "pairwise.complete.obs")
-ggcorrplot(cor_matrix, colors = c("blue", "white", "red"), title = "Pairwise Correlations Between Constituent Variables", lab = TRUE)
-
-#standarlized and merge into 4 categories
-library(dplyr)
-library(ggcorrplot)
-vdem_filtered <- vdem %>%
-  filter(year >= 1990&year<=2005) %>%
-  select(year, country_name,v2capolit, v2canonpol,v2caassemb, 
-         v2caviol, v2psnatpar, v2pscomprg, v2caautmob, v2mecorrpt, v2castate, 
-         v2elirreg, v2x_libdem)
-vdem_standardized <- vdem_filtered %>%
-  mutate(across(-year, ~scale(.)[,1]))  
-vdem_standardized <- vdem_standardized %>%
-  rowwise() %>%
-  mutate(
-    Citizen_Engagement_Index = mean(c(v2capolit, v2canonpol, v2caassemb), na.rm = TRUE),
-    Electoral_Integrity_Index = mean(c(v2elirreg, v2psnatpar, v2pscomprg), na.rm = TRUE),
-    State_Control_Index = mean(c(v2caautmob, v2mecorrpt, v2castate), na.rm = TRUE),
-  )
-
-summary(vdem_standardized)
-
-# Compute correlation matrix
-summary_index_matrix <- cor(vdem_standardized[, c("Citizen_Engagement_Index", 
-                                                  "Electoral_Integrity_Index", 
-                                                  "State_Control_Index", 
-                                                  "v2x_libdem")], use = "pairwise.complete.obs")
-ggcorrplot(summary_index_matrix, 
-           colors = c("blue", "white", "red"), 
-           title = "Correlation Between Summary Indices and Liberal Democracy", 
-           lab = TRUE)
-
-
-# Compute correlation between summary indices and their constituent variables
-index_correlation_matrix <- cor(vdem_standardized[, c("Citizen_Engagement_Index",
-                                                      "Electoral_Integrity_Index", "State_Control_Index",
-                                                      "v2capolit", "v2canonpol", "v2caassemb",
-                                                      "v2elirreg", "v2psnatpar", "v2pscomprg",
-                                                      "v2caautmob", "v2mecorrpt", "v2castate")], 
-                                use = "pairwise.complete.obs")
-
-#using the four categories, plot the trend by years
-vdem_trends <- vdem_standardized %>%
-  group_by(year) %>%
-  summarise(
-    Citizen_Engagement = mean(Citizen_Engagement_Index, na.rm = TRUE),
-    Electoral_Integrity = mean(Electoral_Integrity_Index, na.rm = TRUE),
-    State_Control = mean(State_Control_Index, na.rm = TRUE)
+    State_Control_Index = mean(c(v2caautmob, v2mecorrpt, v2castate), na.rm = TRUE)
   ) %>%
-  pivot_longer(cols = -year, names_to = "Index", values_to = "Value")
-
-ggplot(vdem_trends, aes(x = year, y = Value, color = Index)) +
-  geom_line(size = 1) +
-  labs(title = "Trends of Citizen Engagement, Electoral Integrity, and State Control (1990-2005)",
-       x = "Year",
-       y = "Index Value (Mean of Standardized Variables)",
-       color = "Category") +
-  theme_minimal() +
-  theme(legend.position = "bottom")
-
-#test correlation between four categories
-cor_matrix <- cor(vdem_standardized[, c("Citizen_Engagement_Index", 
-                                        "Electoral_Integrity_Index", 
-                                        "State_Control_Index")], 
-                  use = "pairwise.complete.obs")
-print(cor_matrix)
+  ungroup()
 
 # Reverse State Control Index so that higher values = better democracy
 vdem_standardized <- vdem_standardized %>%
-  mutate(State_Control_Index_Reversed = -State_Control_Index)  # Multiply by -1
+  mutate(State_Control_Index_Reversed = -State_Control_Index)
 
-# Create a single Political Culture Index by averaging the three standardized indices
+# Create a single "Political Culture Index"
 vdem_standardized <- vdem_standardized %>%
   rowwise() %>%
   mutate(
@@ -174,125 +52,25 @@ vdem_standardized <- vdem_standardized %>%
 # View summary statistics for Political Culture Index
 summary(vdem_standardized$Political_Culture_Index)
 
-# Load necessary library
-library(ggplot2)
+# Compute correlation between summary indices and democracy
+cor_matrix <- cor(vdem_standardized[, c("Political_Culture_Index", 
+                                        "Citizen_Engagement_Index", 
+                                        "Electoral_Integrity_Index", 
+                                        "State_Control_Index", 
+                                        "v2x_libdem")], 
+                  use = "pairwise.complete.obs")
 
-# Plot histogram
-ggplot(vdem_standardized, aes(x = Political_Culture_Index)) +
-  geom_histogram(binwidth = 0.1, fill = "blue", color = "black", alpha = 0.7) +
-  labs(title = "Distribution of Political Culture Index",
-       x = "Political Culture Index",
-       y = "Frequency") +
-  theme_minimal()
+# Plot correlation heatmap
+ggcorrplot(cor_matrix, 
+           colors = c("blue", "white", "red"), 
+           title = "Correlation Between Summary Indices and Liberal Democracy", 
+           lab = TRUE)
 
-# Compute yearly averages
-vdem_trends <- vdem_standardized %>%
-  group_by(year) %>%
-  summarise(Political_Culture = mean(Political_Culture_Index, na.rm = TRUE))
-
-# Plot trend over time
-ggplot(vdem_trends, aes(x = year, y = Political_Culture)) +
-  geom_line(size = 1, color = "blue") +
-  labs(title = "Trend of Political Culture (1990-2005)",
-       x = "Year",
-       y = "Political Culture Index") +
-  theme_minimal()
-
-
-# Group by region and compute average Political Culture Index
-vdem_region <- vdem_standardized %>%
-  group_by(region) %>%
-  summarise(Mean_Political_Culture = mean(Political_Culture_Index, na.rm = TRUE))
-
-# Bar plot of Political Culture by Region
-ggplot(vdem_region, aes(x = reorder(region, -Mean_Political_Culture), y = Mean_Political_Culture, fill = region)) +
-  geom_bar(stat = "identity") +
-  coord_flip() +  # Flip for readability
-  labs(title = "Political Culture Index by Region",
-       x = "Region",
-       y = "Mean Political Culture Index") +
-  theme_minimal()
-
-# Run linear regression
+# Regression analysis: Does Political Culture predict Democracy?
 model <- lm(v2x_libdem ~ Political_Culture_Index, data = vdem_standardized)
-
-# Print summary
 summary(model)
 
-# Load the V-Dem dataset (replace with actual dataset path if needed)
-data("vdem")  
-
-# Keep relevant variables and filter for years from 2005 onwards
-vdem_clean <- vdem %>%
-  select(year, country_name, v2x_libdem, v2capolit, v2canonpol, v2caassemb, 
-         v2elirreg, v2psnatpar, v2pscomprg, v2caautmob, v2mecorrpt, v2castate) %>%
-  filter(year >= 2005)
-# Define a standardization function
-standardize <- function(x) (x - mean(x, na.rm = TRUE)) / sd(x, na.rm = TRUE)
-
-# Apply standardization
-vdem_clean <- vdem_clean %>%
-  mutate(across(c(v2capolit, v2canonpol, v2caassemb, v2elirreg, v2psnatpar, 
-                  v2pscomprg, v2caautmob, v2mecorrpt, v2castate), standardize))
-# Reverse State Control Index so that higher values mean less state control
-vdem_clean <- vdem_clean %>%
-  mutate(State_Control_Index_Reversed = -1 * ((v2caautmob + v2mecorrpt + v2castate) / 3))
-
-# Compute the three indices
-vdem_clean <- vdem_clean %>%
-  rowwise() %>%
-  mutate(
-    Citizen_Engagement_Index = mean(c(v2capolit, v2canonpol, v2caassemb), na.rm = TRUE),
-    Electoral_Integrity_Index = mean(c(v2elirreg, v2psnatpar, v2pscomprg), na.rm = TRUE),
-    State_Control_Index = State_Control_Index_Reversed
-  ) %>%
-  ungroup()
-vdem_clean <- vdem_clean %>%
-  group_by(country_name) %>%
-  arrange(year) %>%
-  mutate(LDI_pct_change = (v2x_libdem - lag(v2x_libdem)) / lag(v2x_libdem) * 100) %>%
-  ungroup()
-# Run separate regressions
-reg_citizen <- lm(LDI_pct_change ~ Citizen_Engagement_Index, data = vdem_clean)
-reg_electoral <- lm(LDI_pct_change ~ Electoral_Integrity_Index, data = vdem_clean)
-reg_state_control <- lm(LDI_pct_change ~ State_Control_Index, data = vdem_clean)
-
-# Print regression summaries
-summary(reg_citizen)
-summary(reg_electoral)
-summary(reg_state_control)
-
-# Plot Citizen Engagement vs LDI % Change
-ggplot(vdem_clean, aes(x = Citizen_Engagement_Index, y = LDI_pct_change)) +
-  geom_point(color = "black", alpha = 0.5) +
-  geom_smooth(method = "lm", color = "blue", se = FALSE, size = 1) +
-  theme_minimal() +
-  labs(title = "LDI % Change vs Citizen Engagement",
-       x = "Citizen Engagement Index",
-       y = "LDI % Change")
-
-# Plot Electoral Integrity vs LDI % Change
-ggplot(vdem_clean, aes(x = Electoral_Integrity_Index, y = LDI_pct_change)) +
-  geom_point(color = "black", alpha = 0.5) +
-  geom_smooth(method = "lm", color = "blue", se = FALSE, size = 1) +
-  theme_minimal() +
-  labs(title = "LDI % Change vs Electoral Integrity",
-       x = "Electoral Integrity Index",
-       y = "LDI % Change")
-
-# Plot State Control vs LDI % Change
-ggplot(vdem_clean, aes(x = State_Control_Index, y = LDI_pct_change)) +
-  geom_point(color = "black", alpha = 0.5) +
-  geom_smooth(method = "lm", color = "blue", se = FALSE, size = 1) +
-  theme_minimal() +
-  labs(title = "LDI % Change vs State Control",
-       x = "State Control Index",
-       y = "LDI % Change")
-
-# Load necessary libraries
-library(ggplot2)
-
-# Scatter plot with regression line
+# Scatter plot: Political Culture vs. Liberal Democracy
 ggplot(vdem_standardized, aes(x = Political_Culture_Index, y = v2x_libdem)) +
   geom_point(color = "black", alpha = 0.5) +  # Scatter points
   geom_smooth(method = "lm", color = "blue", se = FALSE, size = 1) +  # Regression line
@@ -300,3 +78,24 @@ ggplot(vdem_standardized, aes(x = Political_Culture_Index, y = v2x_libdem)) +
        x = "Political Culture Index",
        y = "Liberal Democracy Index") +
   theme_minimal()
+
+# Compute yearly averages of summary indices
+vdem_trends <- vdem_standardized %>%
+  group_by(year) %>%
+  summarise(
+    Political_Culture = mean(Political_Culture_Index, na.rm = TRUE),
+    Citizen_Engagement = mean(Citizen_Engagement_Index, na.rm = TRUE),
+    Electoral_Integrity = mean(Electoral_Integrity_Index, na.rm = TRUE),
+    State_Control = mean(State_Control_Index, na.rm = TRUE)
+  ) %>%
+  pivot_longer(cols = -year, names_to = "Index", values_to = "Value")
+
+# Plot trends of Political Culture over time
+ggplot(vdem_trends, aes(x = year, y = Value, color = Index)) +
+  geom_line(size = 1) +
+  labs(title = "Trends of Political Culture, Citizen Engagement, Electoral Integrity, and State Control (1990-2005)",
+       x = "Year",
+       y = "Index Value (Mean of Standardized Variables)",
+       color = "Category") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
