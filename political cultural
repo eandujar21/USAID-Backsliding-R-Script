@@ -1,0 +1,101 @@
+# Load necessary libraries
+library(devtools)
+library(vdemdata)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(car)
+library(ggcorrplot)
+
+# Install the vdemdata package (if not installed)
+# devtools::install_github("vdeminstitute/vdemdata")
+
+# Load V-Dem dataset
+data("vdem")  
+
+# Filter data for years 1990-2005 and select relevant variables
+vdem_filtered <- vdem %>%
+  filter(year >= 1990 & year <= 2005) %>%
+  select(year, country_name, v2x_libdem, 
+         v2capolit, v2canonpol, v2caassemb, 
+         v2elirreg, v2psnatpar, v2pscomprg, 
+         v2caautmob, v2mecorrpt, v2castate)
+
+# Standardize all selected variables (except year & country_name)
+vdem_standardized <- vdem_filtered %>%
+  mutate(across(-c(year, country_name), ~ scale(.)[,1]))
+
+# Create summary indices
+vdem_standardized <- vdem_standardized %>%
+  rowwise() %>%
+  mutate(
+    Citizen_Engagement_Index = mean(c(v2capolit, v2canonpol, v2caassemb), na.rm = TRUE),
+    Electoral_Integrity_Index = mean(c(v2elirreg, v2psnatpar, v2pscomprg), na.rm = TRUE),
+    State_Control_Index = mean(c(v2caautmob, v2mecorrpt, v2castate), na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+# Reverse State Control Index so that higher values = better democracy
+vdem_standardized <- vdem_standardized %>%
+  mutate(State_Control_Index_Reversed = -State_Control_Index)
+
+# Create a single "Political Culture Index"
+vdem_standardized <- vdem_standardized %>%
+  rowwise() %>%
+  mutate(
+    Political_Culture_Index = mean(c(Citizen_Engagement_Index, 
+                                     Electoral_Integrity_Index, 
+                                     State_Control_Index_Reversed), na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+# View summary statistics for Political Culture Index
+summary(vdem_standardized$Political_Culture_Index)
+
+# Compute correlation between summary indices and democracy
+cor_matrix <- cor(vdem_standardized[, c("Political_Culture_Index", 
+                                        "Citizen_Engagement_Index", 
+                                        "Electoral_Integrity_Index", 
+                                        "State_Control_Index", 
+                                        "v2x_libdem")], 
+                  use = "pairwise.complete.obs")
+
+# Plot correlation heatmap
+ggcorrplot(cor_matrix, 
+           colors = c("blue", "white", "red"), 
+           title = "Correlation Between Summary Indices and Liberal Democracy", 
+           lab = TRUE)
+
+# Regression analysis: Does Political Culture predict Democracy?
+model <- lm(v2x_libdem ~ Political_Culture_Index, data = vdem_standardized)
+summary(model)
+
+# Scatter plot: Political Culture vs. Liberal Democracy
+ggplot(vdem_standardized, aes(x = Political_Culture_Index, y = v2x_libdem)) +
+  geom_point(color = "black", alpha = 0.5) +  # Scatter points
+  geom_smooth(method = "lm", color = "blue", se = FALSE, size = 1) +  # Regression line
+  labs(title = "Liberal Democracy vs Political Culture Index",
+       x = "Political Culture Index",
+       y = "Liberal Democracy Index") +
+  theme_minimal()
+
+# Compute yearly averages of summary indices
+vdem_trends <- vdem_standardized %>%
+  group_by(year) %>%
+  summarise(
+    Political_Culture = mean(Political_Culture_Index, na.rm = TRUE),
+    Citizen_Engagement = mean(Citizen_Engagement_Index, na.rm = TRUE),
+    Electoral_Integrity = mean(Electoral_Integrity_Index, na.rm = TRUE),
+    State_Control = mean(State_Control_Index, na.rm = TRUE)
+  ) %>%
+  pivot_longer(cols = -year, names_to = "Index", values_to = "Value")
+
+# Plot trends of Political Culture over time
+ggplot(vdem_trends, aes(x = year, y = Value, color = Index)) +
+  geom_line(size = 1) +
+  labs(title = "Trends of Political Culture, Citizen Engagement, Electoral Integrity, and State Control (1990-2005)",
+       x = "Year",
+       y = "Index Value (Mean of Standardized Variables)",
+       color = "Category") +
+  theme_minimal() +
+  theme(legend.position = "bottom")

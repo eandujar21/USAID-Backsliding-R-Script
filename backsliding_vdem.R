@@ -615,6 +615,11 @@ model_pct_change <- lm(ldi_pct_change ~ ., data = mutated_data %>% select(ldi_pc
 # Display regression results
 summary(model_pct_change)
 
+#Regression of the Index on % Change in LDI
+index_model <- lm(ldi_pct_change ~ index, data = mutated_data)
+summary(index_model)
+
+
 
 ###### END OF INT FACTORS ########
 
