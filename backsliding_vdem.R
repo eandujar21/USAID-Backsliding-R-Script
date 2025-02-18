@@ -17,11 +17,11 @@ v_dem <- vdem
 #### POLITICAL ECONOMY INDEX ###################
 
 
-#getwd()
-#setwd("C:/Users/eddie/Downloads/V-Dem-CY-FullOthers-v14_csv_YyKfizl")
+getwd()
+setwd("C:/Users/eddie/Downloads/V-Dem-CY-FullOthers-v14_csv_YyKfizl")
 
 # CSV file path (commented out since it is a local file):
-#vdem <- read.csv("V-Dem-CY-Full+Others-v14.csv")
+vdem <- read.csv("V-Dem-CY-Full+Others-v14.csv")
 
 library(tidyverse)
 
@@ -87,14 +87,14 @@ vdem_cleaner %>%
 # Assigning higher weights to z_gdp and z_v2peapsecon (e.g., 2x weight for these two)
 weights <- c(
   z_gdp = 2, 
-  z_v2peapsecon = 2, 
+  z_v2peapsecon = 0.5, 
   z_gdppc = 1, 
   z_inflation = 1, 
   z_imports = 1, 
   z_fuel_income_pc = 1, 
   z_urban_pop = 1, 
   z_urbanization = 1,
-  z_v2xpe_exlecon = 1
+  z_v2xpe_exlecon = 2
 )
 
 
@@ -242,7 +242,7 @@ numeric_vars <- v_dem_filtered %>%
 #cor_with_libdem <- cor_with_libdem[names(cor_with_libdem) != "v2x_libdem"]
 
 # Rename variables using the mapping
-names(cor_with_libdem) <- var_names[names(cor_with_libdem)]
+#names(cor_with_libdem) <- var_names[names(cor_with_libdem)]
 
 # Sort correlations in descending order
 #cor_with_libdem <- sort(cor_with_libdem, decreasing = TRUE)
@@ -312,10 +312,10 @@ numeric_vars_rev <- v_dem_reversed %>%
 #cor_with_libdem_rev <- cor_with_libdem_rev[names(cor_with_libdem) != "v2x_libdem"]
 
 # Rename variables using the mapping
-names(cor_with_libdem_rev) <- var_names[names(cor_with_libdem_rev)]
+#names(cor_with_libdem_rev) <- var_names[names(cor_with_libdem_rev)]
 
 # Sort correlations in descending order
-cor_with_libdem_rev <- sort(cor_with_libdem_rev, decreasing = TRUE)
+#cor_with_libdem_rev <- sort(cor_with_libdem_rev, decreasing = TRUE)
 
 # Assign colors based on correlation values
 #bar_colors <- ifelse(cor_with_libdem_rev > 0.5, "green",
@@ -878,70 +878,127 @@ summary(model)
 
 
 
-model2 <- lm(liberal_democracy ~ ., data = regression_data)
 
 
 
 
 
 
+library(dplyr)
+library(tidyr)
 
-
-# Step 1: Compute the difference in liberal_democracy from 2006 to 2011
-libdem_change <- new_dataset %>%
+# Step 1: Compute the difference in LDI_pct_change from 2006 to 2011
+ldi_change <- new_dataset %>%
   filter(year %in% c(2006, 2011)) %>%
-  select(country_name, year, liberal_democracy) %>%
-  spread(key = year, value = liberal_democracy) %>%
-  mutate(libdem_change = `2011` - `2006`) %>%
-  select(country_name, libdem_change)
+  select(country_name, year, LDI_pct_change) %>%
+  pivot_wider(names_from = year, values_from = LDI_pct_change) %>%
+  mutate(ldi_change = `2011` - `2006`) %>%
+  select(country_name, ldi_change)
 
 # Step 2: Extract independent variables from 2006, keeping only `_index` variables
 independent_vars_2006 <- new_dataset %>%
   filter(year == 2006) %>%
-  select(country_name, ends_with("_index"))  # Keep only variables ending in "_index"
+  select(country_name, ends_with("_index"))  
 
-# Step 3: Merge the computed difference with independent variables from 2006 (KEEP country_name)
+# Step 3: Merge the computed difference with independent variables from 2006
 regression_data <- independent_vars_2006 %>%
-  left_join(libdem_change, by = "country_name")
+  left_join(ldi_change, by = "country_name") %>%
+  drop_na()  # Remove missing values
 
+# Step 4: Run six separate regressions, one for each independent variable
+independent_vars <- names(regression_data)[names(regression_data) != "ldi_change"]
 
-# Step 4: Run the regression
-model <- lm(libdem_change ~ ., data = regression_data)
+models <- lapply(independent_vars, function(var) {
+  formula <- as.formula(paste("ldi_change ~", var))
+  lm(formula, data = regression_data)
+})
 
-# View the regression results
-summary(model)
-
-
-
-
-
-
-
-
-
-libdem_2006 <- new_dataset %>%
-  filter(year == 2006) %>%
-  select(country_name, liberal_democracy) %>%
-  rename(liberal_democracy_2006 = liberal_democracy)  # Rename for clarity
-
-
-
-
-regression_data <- independent_vars_2006 %>%
-  left_join(libdem_change, by = "country_name") %>%  # Merge change in libdem
-  left_join(libdem_2006, by = "country_name")  # Add 2006 values for control
+# Step 5: Display regression results
+lapply(models, summary)
 
 
 
 
 
-# Pooled regression model
-model_pooled <- lm(
-  libdem_change ~ economy_index + institutions_index + Political_Culture_Index + liberal_democracy_2006, 
-  data = regression_data_clean
-)
 
-# Summary of results
-summary(model_pooled)
 
-view(regression_data_clean)
+
+
+
+
+
+
+
+##### LDI Percent Change Panel Data ###########
+
+
+
+library(dplyr)
+library(plm)
+
+# Step 1: Create lagged independent variables (by one time period, e.g., 5 years)
+panel_data <- new_dataset %>%
+  arrange(country_name, year) %>%  # Ensure correct order
+  group_by(country_name) %>%
+  mutate(across(ends_with("_index"), lag, n = 5)) %>%  # Lag all _index variables by 5 years
+  ungroup()
+
+# Step 2: Filter out the first few years where lagged data is missing
+panel_data <- panel_data %>%
+  filter(!is.na(liberal_democracy) & year >= 2011)  # Ensure lagged vars exist
+
+# Step 3: Convert to panel data format
+panel_data <- pdata.frame(panel_data, index = c("country_name", "year"))
+
+# Step 4: Run a fixed effects model with all indices, including LDI_pct_change as the dependent variable
+model_fe_ldi <- plm(LDI_pct_change ~ economy_index + Governance_Index + 
+                      social_index + international_index + institutions_index, 
+                    data = panel_data, effect = "individual", model = "within")
+
+# Step 5: Run a random effects model for comparison
+model_re_ldi <- plm(LDI_pct_change ~ economy_index + Governance_Index + 
+                      social_index + international_index + institutions_index, 
+                    data = panel_data, model = "random")
+
+# Step 6: Compare models
+summary(model_fe_ldi)
+summary(model_re_ldi)
+
+# Step 7: Hausman test
+phtest(model_fe_ldi, model_re_ldi)
+
+
+
+
+
+######## Liberal Democracy Panel Data (with lag) ######
+
+# Create a lag for liberal_democracy (shift by 5 years)
+panel_data_lagged <- panel_data %>%
+  arrange(country_name, year) %>%
+  group_by(country_name) %>%
+  mutate(liberal_democracy_lagged = lag(liberal_democracy, 5)) %>%
+  ungroup()
+
+
+# Run a fixed effects model with the current year's indices and the lagged liberal democracy
+model_fe_ldi_lagged <- plm(liberal_democracy_lagged ~ economy_index + Governance_Index + 
+                             social_index + international_index + institutions_index, 
+                           data = panel_data_lagged, effect = "individual", model = "within")
+
+# Run a random effects model for comparison
+model_re_ldi_lagged <- plm(liberal_democracy_lagged ~ economy_index + Governance_Index + 
+                             social_index + international_index + institutions_index, 
+                           data = panel_data_lagged, model = "random")
+
+# Step 3: Compare models
+summary(model_fe_ldi_lagged)
+summary(model_re_ldi_lagged)
+
+# Step 4: Hausman test
+phtest(model_fe_ldi_lagged, model_re_ldi_lagged)
+
+
+
+### LDI PCT CHANGE (lag) ########
+
