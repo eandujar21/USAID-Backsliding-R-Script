@@ -813,7 +813,7 @@ view(new_dataset)
 
 
 
-#### REGRESSION #########3
+#### REGRESSION #########
 
 
 # Rename the columns in new_dataset
@@ -879,7 +879,7 @@ summary(model)
 
 
 
-
+model2 <- lm(liberal_democracy ~ ., data = regression_data)
 
 
 
@@ -944,3 +944,5 @@ model_pooled <- lm(
 
 # Summary of results
 summary(model_pooled)
+
+view(regression_data_clean)
