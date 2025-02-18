@@ -174,14 +174,14 @@ print(na_summary)
 # Yearly Trends of Each Variable
 
 # Remove 'country_name' before aggregation
-yearly_avg <- aggregate(. ~ year, data = v_dem_filtered[, !names(v_dem_filtered) %in% "country_name"], FUN = mean, na.rm = TRUE)
+#yearly_avg <- aggregate(. ~ year, data = v_dem_filtered[, !names(v_dem_filtered) %in% "country_name"], FUN = mean, na.rm = TRUE)
 
 # Number of variables (excluding 'year')
-num_vars <- ncol(yearly_avg) - 1  
+#num_vars <- ncol(yearly_avg) - 1  
 # Setting image size
-options(repr.plot.width = 25, repr.plot.height = 20)
+#options(repr.plot.width = 25, repr.plot.height = 20)
 # Adjust layout and margins
-par(mfrow = c(ceiling(num_vars / 2), 2), mar = c(4, 4, 2, 1))  
+#par(mfrow = c(ceiling(num_vars / 2), 2), mar = c(4, 4, 2, 1))  
 
 # Loop through each variable and create a separate plot
 #for (var in colnames(yearly_avg)[-1]) {
@@ -192,11 +192,11 @@ par(mfrow = c(ceiling(num_vars / 2), 2), mar = c(4, 4, 2, 1))
 
 
 # Creating Correlation Plot
-library(corrplot)
+#library(corrplot)
 
 # Select only numeric columns
-numeric_vars <- v_dem_filtered %>%
-  select(-year, -country_name)
+#numeric_vars <- v_dem_filtered %>%
+  #select(-year, -country_name)
 
 # Compute correlation matrix
 #cor_matrix <- cor(numeric_vars, use = "pairwise.complete.obs")
@@ -210,27 +210,27 @@ numeric_vars <- v_dem_filtered %>%
 #options(repr.plot.width = 10, repr.plot.height = 10)
 
 # Define the variable name mapping
-var_names <- c(
-  "v2exrescon" = "Exec_Respect_Constitution",
-  "v2xlg_legcon" = "Legislative_Constraints",
-  "v2x_jucon" = "Judicial_Independence",
-  "v2mecenefm" = "Media_Freedom",
-  "v2excrptps" = "Exec_Corruption_Perception",
-  "v2exbribe" = "Exec_Bribery",
-  "v2exembez" = "Exec_Embezzlement",
-  "v2x_execorr" = "Exec_Overall_Corruption",
-  "v2exdfcbhs" = "HeadOfState_Cabinet_Power",
-  "v2exdfvths" = "HeadOfState_Veto_Power",
-  "v2exdfdmhs" = "HeadOfState_Dismiss_Ministers",
-  "v2exdfpphs" = "HeadOfState_Propose_Laws"
-)
+#var_names <- c(
+#  "v2exrescon" = "Exec_Respect_Constitution",
+#  "v2xlg_legcon" = "Legislative_Constraints",
+#  "v2x_jucon" = "Judicial_Independence",
+#  "v2mecenefm" = "Media_Freedom",
+#  "v2excrptps" = "Exec_Corruption_Perception",
+#  "v2exbribe" = "Exec_Bribery",
+#  "v2exembez" = "Exec_Embezzlement",
+#  "v2x_execorr" = "Exec_Overall_Corruption",
+#  "v2exdfcbhs" = "HeadOfState_Cabinet_Power",
+#  "v2exdfvths" = "HeadOfState_Veto_Power",
+#  "v2exdfdmhs" = "HeadOfState_Dismiss_Ministers",
+#  "v2exdfpphs" = "HeadOfState_Propose_Laws"
+#)
 
 # Adjust margins (bottom, left, top, right)
 #par(mar = c(5, 12, 6, 2))  # Increased top margin
 
 # Select only numeric columns
-numeric_vars <- v_dem_filtered %>%
-  select(-year, -country_name)
+#numeric_vars <- v_dem_filtered %>%
+ # select(-year, -country_name)
 
 # Compute correlation matrix
 #cor_matrix <- cor(numeric_vars, use = "pairwise.complete.obs")
@@ -279,28 +279,28 @@ v_dem_reversed$v2exdfdmhs <- v_dem_reversed$v2exdfdmhs * -1 # HOS can dismiss mi
 #options(repr.plot.width = 10, repr.plot.height = 10)
 
 # Define the variable name mapping
-var_names <- c(
-  "v2exrescon" = "Exec_Respect_Constitution",
-  "v2xlg_legcon" = "Legislative_Constraints",
-  "v2x_jucon" = "Judicial_Independence",
-  "v2mecenefm" = "Media_Freedom",
-  "v2excrptps" = "Exec_Corruption_Perception",
-  "v2exbribe" = "Exec_Bribery",
-  "v2exembez" = "Exec_Embezzlement",
-  "v2x_execorr" = "Exec_Overall_Corruption",
-  "v2exdfcbhs" = "HeadOfState_Cabinet_Power",
-  "v2exdfvths" = "HeadOfState_Veto_Power",
-  "v2exdfdmhs" = "HeadOfState_Dismiss_Ministers",
-  "v2exdfpphs" = "HeadOfState_Propose_Laws",
-  "v2x_libdem" = "LDI"
-)
+#var_names <- c(
+#  "v2exrescon" = "Exec_Respect_Constitution",
+#  "v2xlg_legcon" = "Legislative_Constraints",
+#  "v2x_jucon" = "Judicial_Independence",
+#  "v2mecenefm" = "Media_Freedom",
+#  "v2excrptps" = "Exec_Corruption_Perception",
+#  "v2exbribe" = "Exec_Bribery",
+#  "v2exembez" = "Exec_Embezzlement",
+#  "v2x_execorr" = "Exec_Overall_Corruption",
+#  "v2exdfcbhs" = "HeadOfState_Cabinet_Power",
+#  "v2exdfvths" = "HeadOfState_Veto_Power",
+#  "v2exdfdmhs" = "HeadOfState_Dismiss_Ministers",
+#  "v2exdfpphs" = "HeadOfState_Propose_Laws",
+#  "v2x_libdem" = "LDI"
+#)
 
 # Adjust margins (bottom, left, top, right)
 #par(mar = c(5, 12, 6, 2))  # Increased top margin
 
 # Select only numeric columns
-numeric_vars_rev <- v_dem_reversed %>%
-  select(-year, -country_name)
+#numeric_vars_rev <- v_dem_reversed %>%
+#  select(-year, -country_name)
 
 # Compute correlation matrix
 #cor_matrix_rev <- cor(numeric_vars_rev, use = "pairwise.complete.obs")
@@ -363,9 +363,6 @@ pca_model <- prcomp(v_dem_yearly[, c("Executive_Accountability", "Corruption_Mis
 v_dem_yearly <- v_dem_yearly %>%
   mutate(Governance_Index = pca_model$x[, 1])
 
-view(v_dem_yearly)
-
-
 
 # Select relevant columns for correlation
 #correlation_matrix <- cor(v_dem_yearly[, c("Executive_Accountability", "Corruption_Misuse", "Executive_Power", "Governance_Index")], 
@@ -401,7 +398,6 @@ view(v_dem_yearly)
 # Add the title below the graph
 #mtext("Governance Index and Its Constituents Indicators Over Time", 
 #      side = 1, line = 5, font = 2, cex = 1.2)
-
 
 ###### End of Political Leadership ############# 
 
