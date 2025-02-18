@@ -135,7 +135,7 @@ v_dem_filtered <- v_dem %>%
 # Select only the required columns
 
 v_dem_filtered <- v_dem_filtered %>%
-  select(year,country_name,v2exrescon,v2xlg_legcon,v2x_jucon,v2mecenefm,v2excrptps, v2exbribe,v2exembez, v2exhoshog, 
+  select(year,country_name,v2exrescon,v2xlg_legcon,v2x_jucon,v2mecenefm,v2excrptps, v2exbribe,v2exembez,  
          v2exdfcbhs, v2exdfvths, v2exdfdmhs, v2exdfpphs, v2x_libdem)
 
 # Analyzing distribution
@@ -219,7 +219,6 @@ var_names <- c(
   "v2exbribe" = "Exec_Bribery",
   "v2exembez" = "Exec_Embezzlement",
   "v2x_execorr" = "Exec_Overall_Corruption",
-  "v2exhoshog" = "HeadOfState_HeadOfGov",
   "v2exdfcbhs" = "HeadOfState_Cabinet_Power",
   "v2exdfvths" = "HeadOfState_Veto_Power",
   "v2exdfdmhs" = "HeadOfState_Dismiss_Ministers",
@@ -266,16 +265,15 @@ names(cor_with_libdem) <- var_names[names(cor_with_libdem)]
 #     col = "black", font = 2, cex = 0.9)
 
 
-### Reversing the Coding Scheme so that All Variables Align Positively with LDI
+### Reversing the Coding Scheme so that variables so that higher values mean more democracy
 # Create a new dataframe with direction reversed for specific variables
 v_dem_reversed <- v_dem_filtered
 
 # Reverse the direction of the specified variables
-v_dem_reversed$v2exdfpphs <- v_dem_reversed$v2exdfpphs * -1 # HOS can propse new laws
-v_dem_reversed$v2excrptps <- v_dem_reversed$v2excrptps * -1 # Perception of corruption
-v_dem_reversed$v2exbribe <- v_dem_reversed$v2exbribe * -1 # Extent of Bribery
-v_dem_reversed$v2exembez <- v_dem_reversed$v2exembez * -1 # Misuse of state resources
-# v_dem_reversed$v2mecenefm <- v_dem_reversed$v2mecenefm * -1 # Media censorship 
+
+v_dem_reversed$v2exdfcbhs <- v_dem_reversed$v2exdfcbhs * -1 # HOS can appoint cabinet ministers
+v_dem_reversed$v2exdfvths <- v_dem_reversed$v2exdfvths * -1 # HOS has veto power
+v_dem_reversed$v2exdfdmhs <- v_dem_reversed$v2exdfdmhs * -1 # HOS can dismiss ministers
 
 # Setting image size
 #options(repr.plot.width = 10, repr.plot.height = 10)
@@ -290,7 +288,6 @@ var_names <- c(
   "v2exbribe" = "Exec_Bribery",
   "v2exembez" = "Exec_Embezzlement",
   "v2x_execorr" = "Exec_Overall_Corruption",
-  "v2exhoshog" = "HeadOfState_HeadOfGov",
   "v2exdfcbhs" = "HeadOfState_Cabinet_Power",
   "v2exdfvths" = "HeadOfState_Veto_Power",
   "v2exdfdmhs" = "HeadOfState_Dismiss_Ministers",
@@ -344,7 +341,7 @@ v_dem_grouped <- v_dem_reversed %>%
   mutate(
     Executive_Accountability = rowMeans(select(., v2exrescon, v2xlg_legcon, v2x_jucon, v2mecenefm), na.rm = TRUE),
     Corruption_Misuse = rowMeans(select(., v2excrptps, v2exbribe, v2exembez), na.rm = TRUE),
-    Executive_Power = rowMeans(select(., v2exhoshog, v2exdfcbhs, v2exdfvths, v2exdfdmhs, v2exdfpphs), na.rm = TRUE)
+    Executive_Power = rowMeans(select(., v2exdfcbhs, v2exdfvths, v2exdfdmhs, v2exdfpphs), na.rm = TRUE)
   )
 
 # Aggregate data by year and country_name
@@ -367,6 +364,8 @@ v_dem_yearly <- v_dem_yearly %>%
   mutate(Governance_Index = pca_model$x[, 1])
 
 view(v_dem_yearly)
+
+
 
 # Select relevant columns for correlation
 #correlation_matrix <- cor(v_dem_yearly[, c("Executive_Accountability", "Corruption_Misuse", "Executive_Power", "Governance_Index")], 
