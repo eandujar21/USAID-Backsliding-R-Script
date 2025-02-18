@@ -14,7 +14,7 @@ library(vdemdata)
 v_dem <- vdem
 
 
-#### POLITICAL ECONOMY INDEX
+#### POLITICAL ECONOMY INDEX ###################
 
 
 #getwd()
@@ -119,7 +119,7 @@ vdem_cleaner <- vdem_cleaner %>%
 summary(vdem_cleaner$PEI_weighted)
 
 
-####### END OF POLITICAL ECONOMY INDEX
+####### END OF POLITICAL ECONOMY INDEX #############
 
 ####### Poltical Leadership #################
 # Loading V-Dem dataset
@@ -409,7 +409,7 @@ mtext("Governance Index and Its Constituents Indicators Over Time",
 
 
 
-####### POLITICAL INSTITUTIONS
+####### POLITICAL INSTITUTIONS ###########
 
 # Subset
 
@@ -435,7 +435,7 @@ library(dplyr)
 
 # Create PII (Political Institutional Index) and add it to the dataset
 vdem_institution <- subset_data2 %>%
-  filter(year >= 2005) %>%
+  filter(year >= 2004) %>%
   mutate(
     z_jucon = as.numeric(scale(v2x_jucon)),  
     z_corr = as.numeric(scale(v2x_corr)),
@@ -450,11 +450,11 @@ view(vdem_institution)
 
 
 
-######## END OF POLITICAL INSTITUTIONS
+######## END OF POLITICAL INSTITUTIONS ################
 
 
 
-### Transformation of LibDem to Percent Change
+### Transformation of LibDem to Percent Change ######
 
 vdem_cleanest <- vdem_cleaner %>%
   group_by(country_name) %>%  # Group by country to calculate change within each country
@@ -620,6 +620,61 @@ summary(model_pct_change)
 
 
 
+
+######### POLITICAL CULTURE ##########
+
+# Filter data for years and select relevant variables
+vdem_filtered <- vdem %>%
+  filter(year >= 2004) %>%
+  select(year, country_name, v2x_libdem, 
+         v2capolit, v2canonpol, v2caassemb, 
+         v2elirreg, v2psnatpar, v2pscomprg, 
+         v2caautmob, v2mecorrpt, v2castate)
+
+# Standardize all selected variables (except year & country_name)
+vdem_standardized <- vdem_filtered %>%
+  mutate(across(-c(year, country_name), ~ scale(.)[,1]))
+
+# Create summary indices
+vdem_standardized <- vdem_standardized %>%
+  rowwise() %>%
+  mutate(
+    Citizen_Engagement_Index = mean(c(v2capolit, v2canonpol, v2caassemb), na.rm = TRUE),
+    Electoral_Integrity_Index = mean(c(v2elirreg, v2psnatpar, v2pscomprg), na.rm = TRUE),
+    State_Control_Index = mean(c(v2caautmob, v2mecorrpt, v2castate), na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+# Reverse State Control Index so that higher values = better democracy
+vdem_standardized <- vdem_standardized %>%
+  mutate(State_Control_Index_Reversed = -State_Control_Index)
+
+# Create a single "Political Culture Index"
+vdem_standardized <- vdem_standardized %>%
+  rowwise() %>%
+  mutate(
+    Political_Culture_Index = mean(c(Citizen_Engagement_Index, 
+                                     Electoral_Integrity_Index, 
+                                     State_Control_Index_Reversed), na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+# View summary statistics for Political Culture Index
+summary(vdem_standardized$Political_Culture_Index)
+
+
+
+####### END OF POLITICAL CULTURE ##################
+
+
+
+
+
+
+
+
+
+
 ####### COMBINING ALL DATA INTO ONE FRAME #############
 
 
@@ -677,6 +732,13 @@ view(new_dataset)
 
 
 
+# Add Political_Culture_Index from vdem_standardized to new_dataset
+new_dataset <- new_dataset %>%
+  left_join(select(vdem_standardized, country_name, year, Political_Culture_Index), 
+            by = c("country_name", "year"))
+
+# View the updated dataset
+print(head(new_dataset))
 
 
 
@@ -745,7 +807,7 @@ view(new_dataset)
 
 
 
-#### REGRESSION
+#### REGRESSION #########3
 
 
 # Rename the columns in new_dataset
@@ -779,32 +841,68 @@ summary(model2)
 
 
 
-### TIME LAG MODEL (WORK IN PROGRESS)
+### TIME LAG MODEL (WORK IN PROGRESS) #####
 
 
-# Step 1: Calculate the change in liberal_democracy between 2005 and 2010
-change_in_libdem <- new_dataset %>%
-  filter(year == 2005 | year == 2010) %>%
+
+# Step 1: Compute the difference in LDI_pct_change from 2006 to 2011
+ldi_change <- new_dataset %>%
+  filter(year %in% c(2006, 2011)) %>%
+  select(country_name, year, LDI_pct_change) %>%
+  spread(key = year, value = LDI_pct_change) %>%
+  mutate(ldi_change = `2011` - `2006`) %>%
+  select(country_name, ldi_change)
+
+# Step 2: Extract independent variables from 2006, keeping only `_index` variables
+independent_vars_2006 <- new_dataset %>%
+  filter(year == 2006) %>%
+  select(country_name, ends_with("_index"))  # Keep only variables ending in "_index"
+
+# Step 3: Merge the computed difference with independent variables from 2006
+regression_data <- independent_vars_2006 %>%
+  left_join(ldi_change, by = "country_name") %>%
+  select(-country_name)  # Drop country_name to avoid categorical encoding
+
+# Step 4: Run the regression
+model <- lm(ldi_change ~ ., data = regression_data)
+
+# View the regression results
+summary(model)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Step 1: Compute the difference in liberal_democracy from 2006 to 2011
+libdem_change <- new_dataset %>%
+  filter(year %in% c(2006, 2011)) %>%
   select(country_name, year, liberal_democracy) %>%
   spread(key = year, value = liberal_democracy) %>%
-  mutate(libdem_change = `2010` - `2005`) %>%
+  mutate(libdem_change = `2011` - `2006`) %>%
   select(country_name, libdem_change)
 
-# Step 2: Filter the dataset for the year 2005 to get independent variables
-independent_vars_2005 <- new_dataset %>%
-  filter(year == 2005) %>%
-  select(country_name, everything()) %>%
-  select(-year, -liberal_democracy)  # Exclude variables not needed for regression
+# Step 2: Extract independent variables from 2006, keeping only `_index` variables
+independent_vars_2006 <- new_dataset %>%
+  filter(year == 2006) %>%
+  select(country_name, ends_with("_index"))  # Keep only variables ending in "_index"
 
-# Step 3: Merge the change in liberal_democracy with the independent variables
-regression_data <- independent_vars_2005 %>%
-  left_join(change_in_libdem, by = "country_name")
+# Step 3: Merge the computed difference with independent variables from 2006
+regression_data <- independent_vars_2006 %>%
+  left_join(libdem_change, by = "country_name") %>%
+  select(-country_name)  # Drop country_name to avoid categorical encoding
 
-# View the result to ensure the join was successful
-print(head(regression_data))
-
-# Step 4: Run the linear regression
+# Step 4: Run the regression
 model <- lm(libdem_change ~ ., data = regression_data)
 
-# View the regression summary
+# View the regression results
 summary(model)
+
