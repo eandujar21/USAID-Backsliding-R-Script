@@ -901,10 +901,10 @@ independent_vars_2006 <- new_dataset %>%
   filter(year == 2006) %>%
   select(country_name, ends_with("_index"))  # Keep only variables ending in "_index"
 
-# Step 3: Merge the computed difference with independent variables from 2006
+# Step 3: Merge the computed difference with independent variables from 2006 (KEEP country_name)
 regression_data <- independent_vars_2006 %>%
-  left_join(libdem_change, by = "country_name") %>%
-  select(-country_name)  # Drop country_name to avoid categorical encoding
+  left_join(libdem_change, by = "country_name")
+
 
 # Step 4: Run the regression
 model <- lm(libdem_change ~ ., data = regression_data)
@@ -912,3 +912,35 @@ model <- lm(libdem_change ~ ., data = regression_data)
 # View the regression results
 summary(model)
 
+
+
+
+
+
+
+
+
+libdem_2006 <- new_dataset %>%
+  filter(year == 2006) %>%
+  select(country_name, liberal_democracy) %>%
+  rename(liberal_democracy_2006 = liberal_democracy)  # Rename for clarity
+
+
+
+
+regression_data <- independent_vars_2006 %>%
+  left_join(libdem_change, by = "country_name") %>%  # Merge change in libdem
+  left_join(libdem_2006, by = "country_name")  # Add 2006 values for control
+
+
+
+
+
+# Pooled regression model
+model_pooled <- lm(
+  libdem_change ~ economy_index + institutions_index + Political_Culture_Index + liberal_democracy_2006, 
+  data = regression_data_clean
+)
+
+# Summary of results
+summary(model_pooled)
