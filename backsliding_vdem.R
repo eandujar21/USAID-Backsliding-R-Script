@@ -996,5 +996,10 @@ phtest(model_fe_ldi_lagged, model_re_ldi_lagged)
 
 
 
-### LDI PCT CHANGE (lag) ########
+view(panel_data_lagged)
 
+
+
+
+
+summary(new_dataset$LDI_pct_change)
