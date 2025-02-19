@@ -9,6 +9,8 @@
 # installed. If you have troubles with the installation 
 # write to contact@v-dem.net at the V-Dem Institute.
 
+#test
+
 library(vdemdata)
 
 v_dem <- vdem
