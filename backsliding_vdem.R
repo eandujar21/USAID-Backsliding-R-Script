@@ -137,269 +137,76 @@ v_dem_filtered <- v_dem %>%
 # Select only the required columns
 
 v_dem_filtered <- v_dem_filtered %>%
-  select(year,country_name,v2exrescon,v2xlg_legcon,v2x_jucon,v2mecenefm,v2excrptps, v2exbribe,v2exembez,  
+  select(year,country_name,v2exrescon,v2xlg_legcon,v2x_jucon,v2mecenefm,v2excrptps, v2exbribe,v2exembez, 
          v2exdfcbhs, v2exdfvths, v2exdfdmhs, v2exdfpphs, v2x_libdem)
 
-# Analyzing distribution
-#print (summary(v_dem_filtered))
-
-# Create a summary of total values, NA counts, and percentage of missing values
-#na_summary <- data.frame(
-#  Column = names(v_dem_filtered),
-#  Total_Values = nrow(v_dem_filtered),
-#  NA_Counts = sapply(v_dem_filtered, function(x) sum(is.na(x))),
-#  NA_Percentage = sapply(v_dem_filtered, function(x) mean(is.na(x)) * 100)  # Convert to percentage
-#)
-
-# Print the summary
-#print(na_summary)
-
+# we are going to fill in the mssing values
 # Calculate the mean or median
 mean_value <- mean(v_dem_filtered$v2xlg_legcon, na.rm = TRUE)
-# median_value <- median(v_dem_filtered$v2xlg_legcon, na.rm = TRUE)
 
 # Fill missing values with mean or median
 v_dem_filtered$v2xlg_legcon[is.na(v_dem_filtered$v2xlg_legcon)] <- mean_value
-# v_dem_filtered$v2xlg_legcon[is.na(v_dem_filtered$v2xlg_legcon)] <- median_value
 
-# Create a summary of total values, NA counts, and percentage of missing values
-na_summary <- data.frame(
-  Column = names(v_dem_filtered),
-  Total_Values = nrow(v_dem_filtered),
-  NA_Counts = sapply(v_dem_filtered, function(x) sum(is.na(x))),
-  NA_Percentage = sapply(v_dem_filtered, function(x) mean(is.na(x)) * 100)  # Convert to percentage
-)
-
-# Print the summary
-print(na_summary)
-
-# Yearly Trends of Each Variable
-
-# Remove 'country_name' before aggregation
-#yearly_avg <- aggregate(. ~ year, data = v_dem_filtered[, !names(v_dem_filtered) %in% "country_name"], FUN = mean, na.rm = TRUE)
-
-# Number of variables (excluding 'year')
-#num_vars <- ncol(yearly_avg) - 1  
-# Setting image size
-#options(repr.plot.width = 25, repr.plot.height = 20)
-# Adjust layout and margins
-#par(mfrow = c(ceiling(num_vars / 2), 2), mar = c(4, 4, 2, 1))  
-
-# Loop through each variable and create a separate plot
-#for (var in colnames(yearly_avg)[-1]) {
-#  plot(yearly_avg$year, yearly_avg[[var]], type = "l", col = "blue", lwd = 2,
-#       xlab = "Year", ylab = "Average Value", main = var)
-#}
-
-
-
-# Creating Correlation Plot
-#library(corrplot)
-
-# Select only numeric columns
-#numeric_vars <- v_dem_filtered %>%
-  #select(-year, -country_name)
-
-# Compute correlation matrix
-#cor_matrix <- cor(numeric_vars, use = "pairwise.complete.obs")
-# Increase plot size
-#options(repr.plot.width = 15, repr.plot.height = 10)
-# Plot the heatmap
-#corrplot(cor_matrix, method = "color", type = "full", tl.cex = 0.8, cl.cex = 0.8,
-#         addCoef.col = "black", number.cex = 0.9, font.labels = 2, tl.col = "black")
-
-# Setting image size
-#options(repr.plot.width = 10, repr.plot.height = 10)
-
-# Define the variable name mapping
-#var_names <- c(
-#  "v2exrescon" = "Exec_Respect_Constitution",
-#  "v2xlg_legcon" = "Legislative_Constraints",
-#  "v2x_jucon" = "Judicial_Independence",
-#  "v2mecenefm" = "Media_Freedom",
-#  "v2excrptps" = "Exec_Corruption_Perception",
-#  "v2exbribe" = "Exec_Bribery",
-#  "v2exembez" = "Exec_Embezzlement",
-#  "v2x_execorr" = "Exec_Overall_Corruption",
-#  "v2exdfcbhs" = "HeadOfState_Cabinet_Power",
-#  "v2exdfvths" = "HeadOfState_Veto_Power",
-#  "v2exdfdmhs" = "HeadOfState_Dismiss_Ministers",
-#  "v2exdfpphs" = "HeadOfState_Propose_Laws"
-#)
-
-# Adjust margins (bottom, left, top, right)
-#par(mar = c(5, 12, 6, 2))  # Increased top margin
-
-# Select only numeric columns
-#numeric_vars <- v_dem_filtered %>%
- # select(-year, -country_name)
-
-# Compute correlation matrix
-#cor_matrix <- cor(numeric_vars, use = "pairwise.complete.obs")
-
-# Extract correlations with v2x_libdem
-#cor_with_libdem <- cor_matrix["v2x_libdem", ]
-
-# Remove self-correlation (v2x_libdem with itself)
-#cor_with_libdem <- cor_with_libdem[names(cor_with_libdem) != "v2x_libdem"]
-
-# Rename variables using the mapping
-#names(cor_with_libdem) <- var_names[names(cor_with_libdem)]
-
-# Sort correlations in descending order
-#cor_with_libdem <- sort(cor_with_libdem, decreasing = TRUE)
-
-# Assign colors based on correlation values
-#bar_colors <- ifelse(cor_with_libdem > 0.5, "green",
-#                     ifelse(cor_with_libdem < -0.5, "red", "blue"))
-
-# Create a horizontal bar plot with more space for the title
-#bar_positions <- barplot(cor_with_libdem, horiz = TRUE, col = bar_colors,
-#                         las = 1, xlab = "Correlation Coefficient", cex.names = 0.9,
-#                         ylim = c(0, length(cor_with_libdem) + 2))  # More space for title
-
-# **Properly add title** without overlapping bars
-#title(main = "Correlation with LDI", font.main = 2, cex.main = 1.2, line = 4)
-
-# Add correlation values inside the bars
-#text_x_pos <- cor_with_libdem * 0.5  # Position text inside bars (centered)
-#text(x = text_x_pos, y = bar_positions, labels = round(cor_with_libdem, 2),
-#     col = "black", font = 2, cex = 0.9)
-
-
-### Reversing the Coding Scheme so that variables so that higher values mean more democracy
 # Create a new dataframe with direction reversed for specific variables
 v_dem_reversed <- v_dem_filtered
 
 # Reverse the direction of the specified variables
-
 v_dem_reversed$v2exdfcbhs <- v_dem_reversed$v2exdfcbhs * -1 # HOS can appoint cabinet ministers
 v_dem_reversed$v2exdfvths <- v_dem_reversed$v2exdfvths * -1 # HOS has veto power
 v_dem_reversed$v2exdfdmhs <- v_dem_reversed$v2exdfdmhs * -1 # HOS can dismiss ministers
 
-# Setting image size
-#options(repr.plot.width = 10, repr.plot.height = 10)
+# Select only numerical variables for PCA
+pca_data <- v_dem_reversed %>%
+  select(-year, -country_name)
+
+# Standardize the data before PCA
+pca_result <- prcomp(pca_data, center = TRUE, scale. = TRUE)
+
+# Extract the first principal component (PC1) as the single index
+v_dem_reversed$Political_Leadership <- pca_result$x[, 1]
 
 # Define the variable name mapping
-#var_names <- c(
-#  "v2exrescon" = "Exec_Respect_Constitution",
-#  "v2xlg_legcon" = "Legislative_Constraints",
-#  "v2x_jucon" = "Judicial_Independence",
-#  "v2mecenefm" = "Media_Freedom",
-#  "v2excrptps" = "Exec_Corruption_Perception",
-#  "v2exbribe" = "Exec_Bribery",
-#  "v2exembez" = "Exec_Embezzlement",
-#  "v2x_execorr" = "Exec_Overall_Corruption",
-#  "v2exdfcbhs" = "HeadOfState_Cabinet_Power",
-#  "v2exdfvths" = "HeadOfState_Veto_Power",
-#  "v2exdfdmhs" = "HeadOfState_Dismiss_Ministers",
-#  "v2exdfpphs" = "HeadOfState_Propose_Laws",
-#  "v2x_libdem" = "LDI"
-#)
+var_names <- c(
+  "v2exrescon" = "Exec_Respect_Constitution",
+  "v2xlg_legcon" = "Legislative_Constraints",
+  "v2x_jucon" = "Judicial_Independence",
+  "v2mecenefm" = "Media_Freedom",
+  "v2excrptps" = "Exec_Corruption_Perception",
+  "v2exbribe" = "Exec_Bribery",
+  "v2exembez" = "Exec_Embezzlement",
+  "v2x_execorr" = "Exec_Overall_Corruption",
+  "v2exdfcbhs" = "HeadOfState_Cabinet_Power",
+  "v2exdfvths" = "HeadOfState_Veto_Power",
+  "v2exdfdmhs" = "HeadOfState_Dismiss_Ministers",
+  "v2exdfpphs" = "HeadOfState_Propose_Laws",
+  "v2x_libdem" = "LDI"
+)
 
-# Adjust margins (bottom, left, top, right)
-#par(mar = c(5, 12, 6, 2))  # Increased top margin
+# Subset the mapping to only include columns that exist in the dataframe
+existing_vars <- names(var_names)[names(var_names) %in% colnames(v_dem_reversed)]
 
-# Select only numeric columns
-#numeric_vars_rev <- v_dem_reversed %>%
-#  select(-year, -country_name)
+# Rename only the existing columns
+v_dem_reversed <- v_dem_reversed %>% rename_with(~ var_names[.x], .cols = existing_vars)
 
-# Compute correlation matrix
-#cor_matrix_rev <- cor(numeric_vars_rev, use = "pairwise.complete.obs")
+# Regression Analysis
+# Remove the 'country_name' column if not needed
+v_dem_reversed_1 <- v_dem_reversed %>% select(-country_name, -year, - Political_Leadership )
 
-# Extract correlations with v2x_libdem
-#cor_with_libdem_rev <- cor_matrix_rev["v2x_libdem", ]
+# First regression: LDI vs. rest of the variables excluding LDI_percent_Change
+model1 <- lm(LDI ~ . , data = v_dem_reversed_1)
 
-# Remove self-correlation (v2x_libdem with itself)
-#cor_with_libdem_rev <- cor_with_libdem_rev[names(cor_with_libdem) != "v2x_libdem"]
+print ("LDI vs Base Variables")
+print (summary(model1))
 
-# Rename variables using the mapping
-#names(cor_with_libdem_rev) <- var_names[names(cor_with_libdem_rev)]
+# Keep only the specified columns
+v_dem_reversed_2 <- v_dem_reversed %>% select(LDI, Political_Leadership)
 
-# Sort correlations in descending order
-#cor_with_libdem_rev <- sort(cor_with_libdem_rev, decreasing = TRUE)
+# Third regression: LDI vs. rest of the variables excluding LDI_percent_Change
+model2 <- lm(LDI ~ . , data = v_dem_reversed_2)
 
-# Assign colors based on correlation values
-#bar_colors <- ifelse(cor_with_libdem_rev > 0.5, "green",
-#                     ifelse(cor_with_libdem_rev < -0.5, "red", "blue"))
+print ("LDI vs Political Leadership Index")
+print (summary(model2))
 
-# Create a horizontal bar plot with more space for the title
-#bar_positions <- barplot(cor_with_libdem_rev, horiz = TRUE, col = bar_colors,
-#                         las = 1, xlab = "Correlation Coefficient", cex.names = 0.9,
-#                         ylim = c(0, length(cor_with_libdem_rev) + 2))  # More space for title
-
-# **Properly add title** without overlapping bars
-#title(main = "Correlation with LDI", font.main = 2, cex.main = 1.2, line = 4)
-
-# Add correlation values inside the bars
-#text_x_pos <- cor_with_libdem_rev * 0.5  # Position text inside bars (centered)
-#text(x = text_x_pos, y = bar_positions, labels = round(cor_with_libdem_rev, 2),
-#     col = "black", font = 2, cex = 0.9)
-
-### Grouping Base Variables into Broad Dimensions
-
-# Compute new variables
-v_dem_grouped <- v_dem_reversed %>%
-  mutate(
-    Executive_Accountability = rowMeans(select(., v2exrescon, v2xlg_legcon, v2x_jucon, v2mecenefm), na.rm = TRUE),
-    Corruption_Misuse = rowMeans(select(., v2excrptps, v2exbribe, v2exembez), na.rm = TRUE),
-    Executive_Power = rowMeans(select(., v2exdfcbhs, v2exdfvths, v2exdfdmhs, v2exdfpphs), na.rm = TRUE)
-  )
-
-# Aggregate data by year and country_name
-v_dem_yearly <- v_dem_grouped %>%
-  group_by(year, country_name) %>%  # Group by both year and country
-  summarise(
-    Executive_Accountability = mean(Executive_Accountability, na.rm = TRUE),
-    Corruption_Misuse = mean(Corruption_Misuse, na.rm = TRUE),
-    Executive_Power = mean(Executive_Power, na.rm = TRUE),
-    .groups = "drop"  # Ungroup after summarization
-  )
-
-### Creation of a Single Index
-# Perform PCA on the scaled variables
-pca_model <- prcomp(v_dem_yearly[, c("Executive_Accountability", "Corruption_Misuse", "Executive_Power")], 
-                     center = TRUE, scale. = FALSE)
-
-# Add the first principal component as the new index
-v_dem_yearly <- v_dem_yearly %>%
-  mutate(Governance_Index = pca_model$x[, 1])
-
-
-# Select relevant columns for correlation
-#correlation_matrix <- cor(v_dem_yearly[, c("Executive_Accountability", "Corruption_Misuse", "Executive_Power", "Governance_Index")], 
- #                         use = "complete.obs")  # Exclude missing values
-# Generate the correlation plot
-#corrplot(correlation_matrix, method = "color", type = "full", 
-#         addCoef.col = "black", tl.col = "black", tl.srt = 45, number.cex = 0.8)
-
-# historical Trend Plotting
-
-# Ensure numeric columns (excluding 'year' and 'country_name')
-#numeric_cols <- setdiff(names(v_dem_yearly), c("year", "country_name"))
-#v_dem_yearly[, numeric_cols] <- lapply(v_dem_yearly[, numeric_cols], as.numeric)
-
-# Aggregate by year (ignoring 'country_name')
-#agg_data <- aggregate(. ~ year, data = v_dem_yearly[, c("year", numeric_cols)], FUN = mean, na.rm = TRUE)
-
-# Setting image size
-#options(repr.plot.width = 15, repr.plot.height = 10)
-
-# Setting image size and adjusting margins to create space below the graph
-#par(mar = c(7, 5, 5, 2))  # Increase bottom margin
-
-# Plot all columns on one graph using matplot (without title)
-#matplot(agg_data$year, agg_data[, -1], type = "o", pch = 16, lty = 1, 
-#        col = c("blue", "red", "green", "purple"),
-#        xlab = "Year", ylab = "Index Value", main = "")
-
-# Add a horizontal legend outside the top border
-#legend("top", legend = colnames(agg_data)[-1], col = c("blue", "red", "green", "purple"), 
-#       pch = 16, lty = 1, horiz = TRUE, xpd = TRUE, inset = -0.1)
-
-# Add the title below the graph
-#mtext("Governance Index and Its Constituents Indicators Over Time", 
-#      side = 1, line = 5, font = 2, cex = 1.2)
 
 ###### End of Political Leadership ############# 
 
@@ -724,8 +531,8 @@ new_dataset <- new_dataset %>%
   left_join(select(subset_data_yr, country_name, year, social_index), 
             by = c("country_name", "year")) %>%
   
-  # Join with v_dem_yearly to add Governance_Index
-  left_join(select(v_dem_yearly, country_name, year, Governance_Index), 
+  # Join with v_dem_reversed to add Political_Leadership_Index
+  left_join(select(v_dem_reversed, country_name, year, Political_Leadership), 
             by = c("country_name", "year"))
 
 # View the result
@@ -755,8 +562,8 @@ new_dataset <- new_dataset %>%
   left_join(select(subset_data_yr, country_name, year, social_index), 
             by = c("country_name", "year")) %>%
   
-  # Join with v_dem_yearly to add Governance_Index
-  left_join(select(v_dem_yearly, country_name, year, Governance_Index), 
+  # Join with v_dem_reversed to add Political Leadership
+  left_join(select(v_dem_reversed, country_name, year, Political_Leadership), 
             by = c("country_name", "year")) %>%
   
   # Join with vdem_institution to add PII
@@ -775,7 +582,7 @@ new_dataset <- mutated_data %>%
 new_dataset <- new_dataset %>%
   left_join(select(subset_data_yr, country_name, year, social_index), 
             by = c("country_name", "year")) %>%
-  left_join(select(v_dem_yearly, country_name, year, Governance_Index), 
+  left_join(select(v_dem_reversed, country_name, year, Political_Leadership), 
             by = c("country_name", "year")) %>%
   left_join(select(vdem_institution, country_name, year, PII), 
             by = c("country_name", "year")) %>%
@@ -949,12 +756,12 @@ panel_data <- panel_data %>%
 panel_data <- pdata.frame(panel_data, index = c("country_name", "year"))
 
 # Step 4: Run a fixed effects model with all indices, including LDI_pct_change as the dependent variable
-model_fe_ldi <- plm(LDI_pct_change ~ economy_index + Governance_Index + 
+model_fe_ldi <- plm(LDI_pct_change ~ economy_index + Political_Leadership + 
                       social_index + international_index + institutions_index, 
                     data = panel_data, effect = "individual", model = "within")
 
 # Step 5: Run a random effects model for comparison
-model_re_ldi <- plm(LDI_pct_change ~ economy_index + Governance_Index + 
+model_re_ldi <- plm(LDI_pct_change ~ economy_index + Political_Leadership + 
                       social_index + international_index + institutions_index, 
                     data = panel_data, model = "random")
 
@@ -980,12 +787,12 @@ panel_data_lagged <- panel_data %>%
 
 
 # Run a fixed effects model with the current year's indices and the lagged liberal democracy
-model_fe_ldi_lagged <- plm(liberal_democracy_lagged ~ economy_index + Governance_Index + 
+model_fe_ldi_lagged <- plm(liberal_democracy_lagged ~ economy_index + Political_Leadership + 
                              social_index + international_index + institutions_index, 
                            data = panel_data_lagged, effect = "individual", model = "within")
 
 # Run a random effects model for comparison
-model_re_ldi_lagged <- plm(liberal_democracy_lagged ~ economy_index + Governance_Index + 
+model_re_ldi_lagged <- plm(liberal_democracy_lagged ~ economy_index + Political_Leadership + 
                              social_index + international_index + institutions_index, 
                            data = panel_data_lagged, model = "random")
 
