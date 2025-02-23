@@ -812,3 +812,13 @@ view(panel_data_lagged)
 
 
 summary(new_dataset$LDI_pct_change)
+
+
+
+
+getwd()
+
+
+
+
+write.csv(new_dataset, "C:/Users/eddie/Downloads/V-Dem-CY-FullOthers-v14_csv_YyKfizl/new_dataset.csv", row.names = FALSE)
