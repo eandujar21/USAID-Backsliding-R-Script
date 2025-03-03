@@ -23,7 +23,10 @@ getwd()
 setwd("C:/Users/eddie/Downloads/V-Dem-CY-FullOthers-v14_csv_YyKfizl")
 
 # CSV file path (commented out since it is a local file):
-vdem <- read.csv("V-Dem-CY-Full+Others-v14.csv")
+#vdem <- read.csv("V-Dem-CY-Full+Others-v14.csv")
+
+vdem <- read.csv("C:/Users/Eddie Andujar/Downloads/V-Dem-CY-FullOthers-v14_csv_YyKfizl (1)/V-Dem-CY-Full+Others-v14.csv")
+
 
 library(tidyverse)
 
@@ -89,7 +92,7 @@ vdem_cleaner %>%
 # Assigning higher weights to z_gdp and z_v2peapsecon (e.g., 2x weight for these two)
 weights <- c(
   z_gdp = 2, 
-  z_v2peapsecon = 0.5, 
+  z_v2peapsecon = 0, 
   z_gdppc = 1, 
   z_inflation = 1, 
   z_imports = 1, 
@@ -119,6 +122,9 @@ vdem_cleaner <- vdem_cleaner %>%
   ungroup()
 
 summary(vdem_cleaner$PEI_weighted)
+
+
+econ_data <- vdem_cleaner
 
 
 ####### END OF POLITICAL ECONOMY INDEX #############
@@ -208,6 +214,8 @@ print ("LDI vs Political Leadership Index")
 print (summary(model2))
 
 
+leadership_data <- v_dem_reversed
+
 ###### End of Political Leadership ############# 
 
 
@@ -253,6 +261,8 @@ head(vdem_institution)
 
 view(vdem_institution)
 
+
+institutions_data <- vdem_institution
 
 
 ######## END OF POLITICAL INSTITUTIONS ################
@@ -343,18 +353,30 @@ social_index_data <- subset_data_yr %>%
     v2pepwrses, # power dist by SES
     v2pepwrsoc, # power dist by social group
     v2clpolcl, # political group equality civil lib
-    v2peapsecon, # access to public services by SES
     v2clgencl, # gender equality civil liberties
     v2pepwrgen, # power dist by gender
   )
                      
-# Aggregate variables into a single summary index by calculating the simple mean
-# Add summary index as new column to data set
-subset_data_yr$social_index <- rowMeans(social_index_data, na.rm = TRUE)    
+# Standardize each variable (column-wise) using scale()
+social_index_data_z <- as.data.frame(lapply(social_index_data, scale))
+
+# Aggregate standardized variables into a single summary index by calculating the simple mean
+# Add summary index as new column to the original data set
+subset_data_yr$social_index <- rowMeans(social_index_data_z, na.rm = TRUE)
+
+
+
+view(culture_data)
+
+
                      ###  END OF SOCIAL STRUCTURE ###
 
 view(subset_data_yr)
 
+summary(subset_data_yr$social_index)
+
+
+social_data <- subset_data_yr
 
 #######  INTERNATIONAL FACTORS #########
 #International Factors Dataset with LibDemIndex
@@ -425,6 +447,8 @@ index_model <- lm(ldi_pct_change ~ index, data = mutated_data)
 summary(index_model)
 
 
+international_data <- mutated_data
+
 
 ###### END OF INT FACTORS ########
 
@@ -473,6 +497,8 @@ vdem_standardized <- vdem_standardized %>%
 summary(vdem_standardized$Political_Culture_Index)
 
 
+
+culture_data <- vdem_standardized
 
 ####### END OF POLITICAL CULTURE ##################
 
@@ -615,6 +641,22 @@ print(new_dataset)
 
 view(new_dataset)
 
+
+
+
+
+
+library(dplyr)
+
+all_indices <- new_dataset %>%
+  left_join(
+    culture_data %>% select(country_name, year, Political_Culture_Index),
+    by = c("country_name", "year")
+  )
+
+
+view(all_indices)
+write.csv(all_indices, "C:/Users/Eddie Andujar/Downloads/all_indices.csv", row.names = FALSE)
 
 
 #### REGRESSION #########
