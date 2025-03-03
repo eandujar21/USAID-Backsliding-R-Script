@@ -1,8 +1,12 @@
 # Specify the file path
-file_path <- "C:/Users/eddie/OneDrive/Documents/GitHub/USAID-Backsliding-R-Script/new_dataset.csv"
+#file_path <- "C:/Users/eddie/OneDrive/Documents/GitHub/USAID-Backsliding-R-Script/new_dataset.csv"
 
 # Read the dataset into R
-new_dataset <- read.csv(file_path)
+#new_dataset <- read.csv(file_path)
+
+
+old_dataset <- read.csv("C:/Users/Eddie Andujar/Downloads/all_indices.csv")
+
 
 # View the first few rows of the dataset
 head(new_dataset)
@@ -19,11 +23,20 @@ view(new_dataset)
 colnames(new_dataset)
 
 
+colnames(new_dataset) <- c(
+  "country_name", 
+  "year", 
+  "international_index",  # Rename democracy_index to international_index
+  "liberal_democracy", 
+  "social_index", 
+  "Governance_Index",     # Rename Political_Leadership to Governance_Index
+  "institutions_index",   # Rename PII to institutions_index
+  "economy_index",        # Rename PEI_weighted to economy_index
+  "Political_Culture_Index"
+)
 
 
-
-
-
+view(new_dataset)
 
 
 library(ggplot2)
@@ -230,7 +243,7 @@ summary(regression_model_backsliding)
 
 ####### END OF POTENTIALLY INTERESTING #####
 
-
+view(new_dataset)
 
 ######### POTENTIALLY EVEN MORE INTERESTING ######
 
@@ -457,8 +470,8 @@ summary(regression_model_backsliding)
 
 
 
-
-
+library(tidyverse)
+vieW(panel_data_lagged)
 
 
 
@@ -679,7 +692,7 @@ formula <- liberal_democracy ~ international_index_lag2 + social_index_lag2 +
   economy_index_lag2 + Political_Culture_Index_lag2
 
 # Run the fixed-effects panel regression
-model_lag2 <- plm(formula, data = full_panel_data, 
+model_lag2 <- plm(formula, data = final_panel_data, 
                   index = c("country_name", "year"), 
                   model = "within", effect = "individual")  # Country-level fixed effects
 
@@ -704,14 +717,12 @@ formula <- liberal_democracy ~ international_index_lag + social_index_lag +
   economy_index_lag + Political_Culture_Index_lag
 
 # Run the fixed-effects panel regression
-model_lag1 <- plm(formula, data = full_panel_data, 
+model_lag1 <- plm(formula, data = final_panel_data, 
                   index = c("country_name", "year"), 
                   model = "within", effect = "individual")  # Country-level fixed effects
 
 # Display results
 summary(model_lag1)
-
-
 
 
 
@@ -727,7 +738,7 @@ formula <- liberal_democracy ~ international_index_lag3 + social_index_lag3 +
   economy_index_lag3 + Political_Culture_Index_lag3
 
 # Run the fixed-effects panel regression
-model_lag3 <- plm(formula, data = full_panel_data, 
+model_lag3 <- plm(formula, data = final_panel_data, 
                   index = c("country_name", "year"), 
                   model = "within", effect = "individual")  # Country-level fixed effects
 
@@ -750,7 +761,7 @@ formula <- liberal_democracy ~ international_index_lag4 + social_index_lag4 +
   economy_index_lag4 + Political_Culture_Index_lag4
 
 # Run the fixed-effects panel regression
-model_lag4 <- plm(formula, data = full_panel_data, 
+model_lag4 <- plm(formula, data = final_panel_data, 
                   index = c("country_name", "year"), 
                   model = "within", effect = "individual")  # Country-level fixed effects
 
@@ -809,32 +820,33 @@ summary(model_custom_lags_2)
 
 
 
+
+
 ####### MACRO INDICES #########
 
 # Load necessary library
 library(dplyr)
 
 # Create the new indices by summing their respective components
-full_panel_data <- full_panel_data %>%
+final_panel_data <- final_panel_data %>%
   mutate(
     Vertical_Accountability = economy_index + Political_Culture_Index + social_index,
     Horizontal_Accountability = institutions_index + international_index + Governance_Index
   )
 
 # Re-standardize each index to ensure mean = 0 and SD = 1
-full_panel_data <- full_panel_data %>%
+final_panel_data <- final_panel_data %>%
   mutate(
     Vertical_Accountability = scale(Vertical_Accountability)[,1],
     Horizontal_Accountability = scale(Horizontal_Accountability)[,1]
   )
 
 # Check summary statistics to confirm standardization
-summary(full_panel_data$Vertical_Accountability)
-summary(full_panel_data$Horizontal_Accountability)
+summary(final_panel_data$Vertical_Accountability)
+summary(final_panel_data$Horizontal_Accountability)
 
-
-view(full_panel_data)
-
+# View the final dataset
+view(final_panel_data)
 
 
 
@@ -848,7 +860,7 @@ library(plm)
 formula <- liberal_democracy ~ Vertical_Accountability + Horizontal_Accountability
 
 # Run the fixed-effects panel regression
-model_accountability <- plm(formula, data = full_panel_data, 
+model_accountability <- plm(formula, data = final_panel_data, 
                             index = c("country_name", "year"), 
                             model = "within", effect = "individual")  # Country-level fixed effects
 
@@ -884,10 +896,10 @@ summary(full_panel_data$Horizontal_Accountability_lagged)
 ######## LAGGED MACRO INDEX REGRESSION #####
 
 # Define the regression formula
-formula_lagged <- liberal_democracy ~ Vertical_Accountability_lagged + Horizontal_Accountability_lagged
+formula_lagged <- liberal_democracy ~ Vertical_Accountability_lag + Horizontal_Accountability_lag
 
 # Run the fixed-effects panel regression (country-level fixed effects)
-model_accountability_lagged <- plm(formula_lagged, data = full_panel_data, 
+model_accountability_lagged <- plm(formula_lagged, data = final_panel_data, 
                                    index = c("country_name", "year"), 
                                    model = "within", effect = "individual")  
 
@@ -920,10 +932,10 @@ summary(full_panel_data$Horizontal_Accountability_lagged2)
 
 
 # Define the regression formula
-formula_lagged2 <- liberal_democracy ~ Vertical_Accountability_lagged2 + Horizontal_Accountability_lagged2
+formula_lagged2 <- liberal_democracy ~ Vertical_Accountability_lag2 + Horizontal_Accountability_lag2
 
 # Run the fixed-effects panel regression (country-level fixed effects)
-model_accountability_lagged2 <- plm(formula_lagged2, data = full_panel_data, 
+model_accountability_lagged2 <- plm(formula_lagged2, data = final_panel_data, 
                                     index = c("country_name", "year"), 
                                     model = "within", effect = "individual")  
 
@@ -956,10 +968,10 @@ summary(full_panel_data$Horizontal_Accountability_lagged4)
 
 
 # Define the regression formula
-formula_lagged4 <- liberal_democracy ~ Vertical_Accountability_lagged4 + Horizontal_Accountability_lagged4
+formula_lagged4 <- liberal_democracy ~ Vertical_Accountability_lag4 + Horizontal_Accountability_lag4
 
 # Run the fixed-effects panel regression (country-level fixed effects)
-model_accountability_lagged4 <- plm(formula_lagged4, data = full_panel_data, 
+model_accountability_lagged4 <- plm(formula_lagged4, data = final_panel_data, 
                                     index = c("country_name", "year"), 
                                     model = "within", effect = "individual")  
 
@@ -995,10 +1007,10 @@ summary(full_panel_data$Horizontal_Accountability_lagged3)
 
 
 # Define the regression formula
-formula_lagged3 <- liberal_democracy ~ Vertical_Accountability_lagged3 + Horizontal_Accountability_lagged3
+formula_lagged3 <- liberal_democracy ~ Vertical_Accountability_lag3 + Horizontal_Accountability_lag3
 
 # Run the fixed-effects panel regression (country-level fixed effects)
-model_accountability_lagged3 <- plm(formula_lagged3, data = full_panel_data, 
+model_accountability_lagged3 <- plm(formula_lagged3, data = final_panel_data, 
                                     index = c("country_name", "year"), 
                                     model = "within", effect = "individual")  
 
@@ -1249,3 +1261,210 @@ model_vertical_horizontal_with_controls_standardized_plm <- plm(
 
 # Display the summary of the model
 summary(model_vertical_horizontal_with_controls_standardized_plm)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+########### REDOING LAGS ##########
+
+
+library(dplyr)
+
+# Create lagged variables with NA for the first row within each country
+new_dataset <- new_dataset %>%
+  arrange(country_name, year) %>%  # Sort by country_name and year
+  group_by(country_name) %>%  # Group by country to apply lag per country
+  mutate(across(ends_with("index"), 
+                ~c(NA, head(., -1)),  # Shift down by 1 row, first becomes NA
+                .names = "{.col}_lag")) %>%  # Name the new lagged variables
+  mutate(across(ends_with("index"), 
+                ~c(NA, NA, head(., -2)),  # Shift down by 2 rows
+                .names = "{.col}_lag2")) %>%
+  mutate(across(ends_with("index"), 
+                ~c(NA, NA, NA, head(., -3)),  # Shift down by 3 rows
+                .names = "{.col}_lag3")) %>%
+  mutate(across(ends_with("index"), 
+                ~c(NA, NA, NA, NA, head(., -4)),  # Shift down by 4 rows
+                .names = "{.col}_lag4")) %>%
+  ungroup()
+
+
+view(new_dataset)
+
+real_panel_data <- new_dataset
+
+
+view(real_panel_data)
+
+
+
+
+
+
+
+
+###### FIXING INDEX ########
+
+full_panel <- read.csv("C:/Users/Eddie Andujar/Documents/GitHub/USAID-Backsliding-R-Script/full_panel_data.csv")
+
+view(full_panel)
+
+
+
+
+
+
+
+
+# Assuming both datasets have 'country_name' and 'year' as identifiers
+new_dataset <- new_dataset %>%
+  left_join(full_panel %>% select(country_name, year, Governance_Index), 
+            by = c("country_name", "year")) %>%
+  mutate(Governance_Index = Governance_Index.y) %>%
+  select(-Governance_Index.y)  # Remove the extra column from join
+
+
+view(new_dataset)
+
+
+# Assuming both datasets have 'country_name' and 'year' as identifiers
+new_dataset <- new_dataset %>%
+  left_join(full_panel %>% select(country_name, year, Governance_Index), 
+            by = c("country_name", "year")) %>%
+  mutate(Governance_Index = Governance_Index.y) %>%
+  select(-Governance_Index.x, -Governance_Index.y)  # Remove both .x and .y columns
+
+
+
+
+
+realest_data <- new_dataset %>%
+  select(country_name, year, 
+         liberal_democracy, international_index, 
+         social_index, institutions_index, 
+         economy_index, Political_Culture_Index, 
+         Governance_Index)
+
+
+library(dplyr)
+
+# Create lagged variables with NA for the first row within each country
+realest_data <- realest_data %>%
+  arrange(country_name, year) %>%  # Sort by country_name and year
+  group_by(country_name) %>%  # Group by country to apply lag per country
+  mutate(across(ends_with("index"), 
+                ~c(NA, head(., -1)),  # Shift down by 1 row, first becomes NA
+                .names = "{.col}_lag")) %>%  # Name the new lagged variables
+  mutate(across(ends_with("index"), 
+                ~c(NA, NA, head(., -2)),  # Shift down by 2 rows
+                .names = "{.col}_lag2")) %>%
+  mutate(across(ends_with("index"), 
+                ~c(NA, NA, NA, head(., -3)),  # Shift down by 3 rows
+                .names = "{.col}_lag3")) %>%
+  mutate(across(ends_with("index"), 
+                ~c(NA, NA, NA, NA, head(., -4)),  # Shift down by 4 rows
+                .names = "{.col}_lag4")) %>%
+  ungroup()
+
+
+view(realest_data)
+
+
+final_panel_data <- realest_data
+
+write.csv(final_panel_data, "C:/Users/Eddie Andujar/Downloads/final_panel_data.csv", row.names = FALSE)
+
+
+
+
+###### RETESTING MACRO LAGS ########
+
+
+####### MACRO INDICES (LAGGED) #########
+
+# Load necessary library
+library(dplyr)
+
+# Create the new lagged indices by summing their respective lagged components
+final_panel_data <- final_panel_data %>%
+  mutate(
+    Vertical_Accountability_lag = economy_index_lag + Political_Culture_Index_lag + social_index_lag,
+    Horizontal_Accountability_lag = institutions_index_lag + international_index_lag + Governance_Index_lag
+  )
+
+# Re-standardize each lagged index to ensure mean = 0 and SD = 1
+final_panel_data <- final_panel_data %>%
+  mutate(
+    Vertical_Accountability_lag = scale(Vertical_Accountability_lag)[,1],
+    Horizontal_Accountability_lag = scale(Horizontal_Accountability_lag)[,1]
+  )
+
+# Check summary statistics to confirm standardization
+summary(final_panel_data$Vertical_Accountability_lag)
+summary(final_panel_data$Horizontal_Accountability_lag)
+
+# View the final dataset
+view(final_panel_data)
+
+
+
+
+
+####### MACRO INDICES (LAGGED 2, 3, 4) #########
+
+# Load necessary library
+library(dplyr)
+
+# Create the new lagged indices (lag2, lag3, lag4) by summing their respective components
+final_panel_data <- final_panel_data %>%
+  mutate(
+    Vertical_Accountability_lag2 = economy_index_lag2 + Political_Culture_Index_lag2 + social_index_lag2,
+    Horizontal_Accountability_lag2 = institutions_index_lag2 + international_index_lag2 + Governance_Index_lag2,
+    Vertical_Accountability_lag3 = economy_index_lag3 + Political_Culture_Index_lag3 + social_index_lag3,
+    Horizontal_Accountability_lag3 = institutions_index_lag3 + international_index_lag3 + Governance_Index_lag3,
+    Vertical_Accountability_lag4 = economy_index_lag4 + Political_Culture_Index_lag4 + social_index_lag4,
+    Horizontal_Accountability_lag4 = institutions_index_lag4 + international_index_lag4 + Governance_Index_lag4
+  )
+
+# Re-standardize each lagged index to ensure mean = 0 and SD = 1
+final_panel_data <- final_panel_data %>%
+  mutate(
+    Vertical_Accountability_lag2 = scale(Vertical_Accountability_lag2)[,1],
+    Horizontal_Accountability_lag2 = scale(Horizontal_Accountability_lag2)[,1],
+    Vertical_Accountability_lag3 = scale(Vertical_Accountability_lag3)[,1],
+    Horizontal_Accountability_lag3 = scale(Horizontal_Accountability_lag3)[,1],
+    Vertical_Accountability_lag4 = scale(Vertical_Accountability_lag4)[,1],
+    Horizontal_Accountability_lag4 = scale(Horizontal_Accountability_lag4)[,1]
+  )
+
+# Check summary statistics to confirm standardization
+summary(final_panel_data$Vertical_Accountability_lag2)
+summary(final_panel_data$Horizontal_Accountability_lag2)
+summary(final_panel_data$Vertical_Accountability_lag3)
+summary(final_panel_data$Horizontal_Accountability_lag3)
+summary(final_panel_data$Vertical_Accountability_lag4)
+summary(final_panel_data$Horizontal_Accountability_lag4)
+
+# View the final dataset
+view(final_panel_data)
+
+
