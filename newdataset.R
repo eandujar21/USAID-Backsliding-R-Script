@@ -439,10 +439,6 @@ view(panel_data_lagged)
 
 
 
-
-### SOMETHING RESEMBLING ACCEPTABLE ##########
-
-
 # Shift the lag variables by one row
 panel_data_lagged$international_index_lag <- c(NA, head(panel_data_lagged$international_index, -1))
 panel_data_lagged$social_index_lag <- c(NA, head(panel_data_lagged$social_index, -1))
